@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
-import { Upload, FileText, AlertCircle, CheckCircle, RefreshCw } from "lucide-react"
+import { Upload, FileText, AlertCircle, CheckCircle, RefreshCw, DollarSign } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -28,6 +28,7 @@ const VerificationPage = () => {
   const [participantsFile, setParticipantsFile] = useState<File | null>(null)
   const [participants, setParticipants] = useState<Participant[]>([])
   const [verificationComplete, setVerificationComplete] = useState(false)
+  const [expectedAmount, setExpectedAmount] = useState<string>("")
 
   const handlePhonepeFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -47,74 +48,43 @@ const VerificationPage = () => {
       return
     }
 
+    if (!expectedAmount || isNaN(Number(expectedAmount)) || Number(expectedAmount) <= 0) {
+      toast.error("Please enter a valid expected payment amount")
+      return
+    }
+
     setIsLoading(true)
 
     try {
-      // In a real app, you would send these files to your backend
-      // const formData = new FormData()
-      // formData.append('phonepeFile', phonepeFile)
-      // formData.append('participantsFile', participantsFile)
-      // const response = await fetch('/api/verify', { method: 'POST', body: formData })
-      // const data = await response.json()
-
-      // Mock verification process
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-
-      // Mock data
-      const mockParticipants: Participant[] = [
-        {
-          id: 1,
-          name: "Rahul Sharma",
-          email: "rahul@example.com",
-          phone: "9876543210",
-          utrId: "UTR123456789",
-          amount: 500,
-          verified: true,
-        },
-        {
-          id: 2,
-          name: "Priya Patel",
-          email: "priya@example.com",
-          phone: "9876543211",
-          utrId: "UTR123456790",
-          amount: 500,
-          verified: true,
-        },
-        {
-          id: 3,
-          name: "Amit Kumar",
-          email: "amit@example.com",
-          phone: "9876543212",
-          utrId: "UTR123456791",
-          amount: 500,
-          verified: false,
-        },
-        {
-          id: 4,
-          name: "Neha Singh",
-          email: "neha@example.com",
-          phone: "9876543213",
-          utrId: "UTR123456792",
-          amount: 750,
-          verified: true,
-        },
-        {
-          id: 5,
-          name: "Vikram Malhotra",
-          email: "vikram@example.com",
-          phone: "9876543214",
-          utrId: "UTR123456793",
-          amount: 750,
-          verified: false,
-        },
-      ]
-
-      setParticipants(mockParticipants)
+      // In a real app, send these files to your backend
+      const formData = new FormData()
+      formData.append('phonepeFile', phonepeFile)
+      formData.append('participantsFile', participantsFile)
+      formData.append('expectedAmount', expectedAmount)
+      
+      // Call the backend API to process the files
+      const response = await fetch('http://localhost:5000/api/verify-payments', {
+        method: 'POST',
+        body: formData
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Verification failed')
+      }
+      
+      const data = await response.json()
+      
+      // After receiving the data, log it to help with debugging
+      console.log('Verification API response:', data);
+      console.log('First participant:', data.participants[0]);
+      
+      setParticipants(data.participants)
       setVerificationComplete(true)
-      toast.success("Verification completed successfully!")
+      toast.success(`Verification completed successfully! ${data.verifiedCount} of ${data.totalCount} payments verified.`)
     } catch (error) {
       console.error("Verification error:", error)
-      toast.error("Error during verification process")
+      toast.error(`Error during verification process: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setIsLoading(false)
     }
@@ -142,64 +112,139 @@ const VerificationPage = () => {
 
         <TabsContent value="upload">
           <Card className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6">
+              {/* Payment amount input separated from upload areas */}
               <div className="space-y-4">
-                <div>
-                  <Label htmlFor="phonepe-file">PhonePe Statement (PDF)</Label>
-                  <div className="mt-1 flex items-center">
-                    <Input
+                <Label htmlFor="expected-amount">Expected Payment Amount (₹)</Label>
+                <div className="flex max-w-md">
+                  <span className="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-l-md">
+                    <DollarSign className="h-4 w-4" />
+                  </span>
+                  <Input
+                    id="expected-amount"
+                    type="number"
+                    placeholder="Enter the expected payment amount"
+                    value={expectedAmount}
+                    onChange={(e) => setExpectedAmount(e.target.value)}
+                    className="rounded-l-none"
+                  />
+                </div>
+                <p className="text-sm text-gray-500">
+                  Enter the expected amount that each participant should have paid
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                <div className="space-y-4">
+                  <Label>PhonePe Statement (PDF)</Label>
+                  <div className="relative flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-6 bg-gray-50 hover:bg-gray-100 transition-all">
+                    {!phonepeFile ? (
+                      <div className="text-center">
+                        <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                        <p className="mt-2 text-sm text-gray-600">Click or drag file to upload PhonePe statement</p>
+                        <p className="text-xs text-gray-500">PDF format only</p>
+                      </div>
+                    ) : (
+                      <div className="text-center">
+                        <FileText className="mx-auto h-12 w-12 text-green-600" />
+                        <p className="mt-2 text-sm font-medium text-gray-900">{phonepeFile.name}</p>
+                        <p className="text-xs text-gray-500">{Math.round(phonepeFile.size / 1024)} KB</p>
+                      </div>
+                    )}
+                    
+                    <input
                       id="phonepe-file"
                       type="file"
                       accept=".pdf"
                       onChange={handlePhonepeFileChange}
-                      className="flex-1"
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                     />
+                    
+                    <Button 
+                      type="button"
+                      variant="outline" 
+                      className="mt-4"
+                      onClick={() => document.getElementById('phonepe-file')?.click()}
+                    >
+                      {phonepeFile ? 'Change File' : 'Select File'}
+                    </Button>
+                    
+                    {phonepeFile && (
+                      <Button 
+                        type="button"
+                        variant="ghost" 
+                        className="mt-2 text-red-500 hover:text-red-700"
+                        onClick={() => setPhonepeFile(null)}
+                      >
+                        Remove
+                      </Button>
+                    )}
                   </div>
-                  {phonepeFile && (
-                    <p className="text-sm text-gray-500 mt-1 flex items-center">
-                      <FileText className="h-4 w-4 mr-1" />
-                      {phonepeFile.name}
-                    </p>
-                  )}
+
+                  <div className="text-sm text-gray-500 bg-blue-50 p-3 rounded-md">
+                    <p className="font-medium text-blue-700">Instructions:</p>
+                    <ul className="list-disc list-inside mt-1 space-y-1">
+                      <li>Upload your PhonePe transaction statement in PDF format</li>
+                      <li>The system will extract UTR numbers, amounts, and timestamps</li>
+                      <li>Only credit transactions will be considered for verification</li>
+                    </ul>
+                  </div>
                 </div>
 
-                <div className="text-sm text-gray-500 bg-blue-50 p-3 rounded-md">
-                  <p className="font-medium text-blue-700">Instructions:</p>
-                  <ul className="list-disc list-inside mt-1 space-y-1">
-                    <li>Upload your PhonePe transaction statement in PDF format</li>
-                    <li>The system will extract UTR numbers, amounts, and timestamps</li>
-                    <li>Only credit transactions will be considered for verification</li>
-                  </ul>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="participants-file">Participants List (CSV)</Label>
-                  <div className="mt-1 flex items-center">
-                    <Input
+                <div className="space-y-4">
+                  <Label>Participants List (CSV)</Label>
+                  <div className="relative flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-6 bg-gray-50 hover:bg-gray-100 transition-all">
+                    {!participantsFile ? (
+                      <div className="text-center">
+                        <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                        <p className="mt-2 text-sm text-gray-600">Click or drag file to upload participants list</p>
+                        <p className="text-xs text-gray-500">CSV format only</p>
+                      </div>
+                    ) : (
+                      <div className="text-center">
+                        <FileText className="mx-auto h-12 w-12 text-green-600" />
+                        <p className="mt-2 text-sm font-medium text-gray-900">{participantsFile.name}</p>
+                        <p className="text-xs text-gray-500">{Math.round(participantsFile.size / 1024)} KB</p>
+                      </div>
+                    )}
+                    
+                    <input
                       id="participants-file"
                       type="file"
                       accept=".csv"
                       onChange={handleParticipantsFileChange}
-                      className="flex-1"
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                     />
+                    
+                    <Button 
+                      type="button"
+                      variant="outline" 
+                      className="mt-4"
+                      onClick={() => document.getElementById('participants-file')?.click()}
+                    >
+                      {participantsFile ? 'Change File' : 'Select File'}
+                    </Button>
+                    
+                    {participantsFile && (
+                      <Button 
+                        type="button"
+                        variant="ghost" 
+                        className="mt-2 text-red-500 hover:text-red-700"
+                        onClick={() => setParticipantsFile(null)}
+                      >
+                        Remove
+                      </Button>
+                    )}
                   </div>
-                  {participantsFile && (
-                    <p className="text-sm text-gray-500 mt-1 flex items-center">
-                      <FileText className="h-4 w-4 mr-1" />
-                      {participantsFile.name}
-                    </p>
-                  )}
-                </div>
 
-                <div className="text-sm text-gray-500 bg-blue-50 p-3 rounded-md">
-                  <p className="font-medium text-blue-700">CSV Format:</p>
-                  <ul className="list-disc list-inside mt-1 space-y-1">
-                    <li>Name, Email, Phone Number, UTR ID, Expected Amount</li>
-                    <li>Ensure the CSV has headers matching these fields</li>
-                    <li>UTR ID should match exactly with the PhonePe statement</li>
-                  </ul>
+                  <div className="text-sm text-gray-500 bg-blue-50 p-3 rounded-md">
+                    <p className="font-medium text-blue-700">CSV Format:</p>
+                    <ul className="list-disc list-inside mt-1 space-y-1">
+                      <li>Name, Email, Phone Number, UTR ID, Expected Amount</li>
+                      <li>Ensure the CSV has headers matching these fields</li>
+                      <li>UTR ID should match exactly with the PhonePe statement</li>
+                    </ul>
+                  </div>
                 </div>
               </div>
             </div>
@@ -207,7 +252,7 @@ const VerificationPage = () => {
             <div className="mt-6 flex justify-end">
               <Button
                 onClick={handleVerification}
-                disabled={!phonepeFile || !participantsFile || isLoading}
+                disabled={!phonepeFile || !participantsFile || !expectedAmount || isLoading}
                 className="flex items-center"
               >
                 {isLoading ? (
@@ -254,35 +299,43 @@ const VerificationPage = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {participants.map((participant) => (
-                    <TableRow key={participant.id}>
-                      <TableCell>{participant.name}</TableCell>
-                      <TableCell>{participant.email}</TableCell>
-                      <TableCell>{participant.phone}</TableCell>
-                      <TableCell>{participant.utrId}</TableCell>
-                      <TableCell>₹{participant.amount}</TableCell>
-                      <TableCell>
-                        {participant.verified ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            <CheckCircle className="mr-1 h-3 w-3" />
-                            Verified
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                            <AlertCircle className="mr-1 h-3 w-3" />
-                            Not Verified
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {!participant.verified && (
-                          <Button variant="outline" size="sm" onClick={() => handleManualVerify(participant.id)}>
-                            Verify Manually
-                          </Button>
-                        )}
+                  {participants.length > 0 ? (
+                    participants.map((participant) => (
+                      <TableRow key={participant.id}>
+                        <TableCell>{participant.name || '—'}</TableCell>
+                        <TableCell>{participant.email || '—'}</TableCell>
+                        <TableCell>{participant.phone || '—'}</TableCell>
+                        <TableCell>{participant.utrId || '—'}</TableCell>
+                        <TableCell>₹{participant.amount || '0'}</TableCell>
+                        <TableCell>
+                          {participant.verified ? (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              <CheckCircle className="mr-1 h-3 w-3" />
+                              Verified
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                              <AlertCircle className="mr-1 h-3 w-3" />
+                              Not Verified
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {!participant.verified && (
+                            <Button variant="outline" size="sm" onClick={() => handleManualVerify(participant.id)}>
+                              Verify Manually
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-4">
+                        No participants found
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )}
                 </TableBody>
               </Table>
             </div>

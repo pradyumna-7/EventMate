@@ -9,7 +9,7 @@ const Navbar = () => {
           <div className="flex items-center">
             <Link to="/" className="flex items-center text-xl font-bold text-primary">
               <QrCode className="mr-2" />
-              UPI Verification System
+              EventMate - UPI Verification System
             </Link>
           </div>
           <div className="flex space-x-4">
