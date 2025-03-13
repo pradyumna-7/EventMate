@@ -209,13 +209,3 @@ components:
             utrId: "123456789013"
             amount: 500
             verified: false
-
-  securitySchemes:
-    BearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-      description: JWT token for authentication
-
-security:
-  - BearerAuth: []
