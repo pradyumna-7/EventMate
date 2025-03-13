@@ -4,37 +4,128 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EventMate API Documentation</title>
-    <!-- Remove the base tag to avoid path issues -->
-    <script src="https://cdn.jsdelivr.net/npm/redoc@2.0.0-rc.55/bundles/redoc.standalone.js"></script>
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700" rel="stylesheet">
     <style>
         body {
             margin: 0;
             padding: 0;
             height: 100vh;
+            font-family: Roboto, sans-serif;
+        }
+        #redoc-container {
+            height: 100%;
+        }
+        #error-container {
+            display: none;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        #loading {
+            text-align: center;
+            padding-top: 50px;
+            font-size: 18px;
+        }
+        .btn {
+            display: inline-block;
+            background: #5aa8f8;
+            color: white;
+            padding: 8px 16px;
+            margin: 10px 5px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        pre {
+            text-align: left;
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            overflow: auto;
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
-    <!-- Use relative path without leading slash -->
-    <redoc spec-url="openapi.yaml" hide-loading></redoc>
+    <div id="loading">Loading API Documentation...</div>
     
-    <!-- Fallback content in case ReDoc fails to load -->
-    <div id="fallback" style="display: none; padding: 20px; text-align: center;">
+    <div id="redoc-container"></div>
+    
+    <div id="error-container">
         <h1>EventMate API Documentation</h1>
-        <p>Unable to load ReDoc. Please try the following:</p>
-        <ul style="list-style: none; padding: 0;">
-            <li><a href="test.html">Test if GitHub Pages is working</a></li>
-            <li><a href="https://raw.githubusercontent.com/Pradyumna-7/EventMate/main/docs/openapi.yaml">View raw OpenAPI specification</a></li>
-        </ul>
+        <p>Unable to load the API documentation. Please try one of the following options:</p>
+        
+        <div>
+            <a href="test.html" class="btn">Test if GitHub Pages is working</a>
+            <a href="direct.html" class="btn">View Raw Documentation</a>
+            <a href="https://raw.githubusercontent.com/Pradyumna-7/EventMate/main/docs/openapi.yaml" class="btn">Download YAML File</a>
+        </div>
+        
+        <div id="debug-info"></div>
     </div>
-    
+
     <script>
-        // Show fallback after 5 seconds if ReDoc hasn't loaded
-        setTimeout(function() {
-            if (!document.querySelector('redoc').shadowRoot) {
-                document.getElementById('fallback').style.display = 'block';
+        // Function to show error and debug information
+        function showError(message, error) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error-container').style.display = 'block';
+            
+            const debugInfo = document.getElementById('debug-info');
+            let debugHTML = `<h3>Error Details:</h3><p>${message}</p>`;
+            
+            if (error) {
+                debugHTML += `<pre>${error.toString()}</pre>`;
             }
-        }, 5000);
+            
+            // Add browser info
+            debugHTML += `<h3>Browser Information:</h3>
+                <pre>User Agent: ${navigator.userAgent}
+URL: ${window.location.href}
+Page Path: ${window.location.pathname}</pre>`;
+            
+            debugInfo.innerHTML = debugHTML;
+        }
+        
+        // First try with standard fetch to display more detailed errors
+        fetch('openapi.yaml')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch YAML: HTTP ${response.status} - ${response.statusText}`);
+                }
+                return response.text();
+            })
+            .then(yaml => {
+                console.log("YAML file loaded successfully, length:", yaml.length);
+                document.getElementById('loading').style.display = 'none';
+                
+                // Dynamically load Redoc after confirming YAML is available
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/redoc@2.0.0/bundles/redoc.standalone.js';
+                script.onload = function() {
+                    Redoc.init(
+                        'openapi.yaml', 
+                        {
+                            scrollYOffset: 50,
+                            hideDownloadButton: false,
+                            expandResponses: '200,201'
+                        },
+                        document.getElementById('redoc-container'),
+                        err => {
+                            if (err) {
+                                showError('ReDoc initialization failed', err);
+                            }
+                        }
+                    );
+                };
+                script.onerror = function(e) {
+                    showError('Failed to load ReDoc script', e);
+                };
+                document.body.appendChild(script);
+            })
+            .catch(error => {
+                showError('Failed to load YAML file', error);
+            });
     </script>
 </body>
 </html>
