@@ -85,7 +85,7 @@ paths:
     get:
       operationId: getVerificationResults
       summary: Get verification results
-      description: Retrieves the results of previous payment verifications
+      description: Retrieves the results of previous payment verifications and returns list of all participants with verification status.
       tags:
         - Verification
       responses:
