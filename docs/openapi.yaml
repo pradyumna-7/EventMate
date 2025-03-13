@@ -81,6 +81,62 @@ paths:
                 success: false
                 message: "Failed to verify payments"
 
+  /results:
+    get:
+      operationId: getVerificationResults
+      summary: Get verification results
+      description: Retrieves the results of previous payment verifications
+      tags:
+        - Verification
+      responses:
+        '200':
+          description: Successful retrieval of verification results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    description: Whether the API call was successful
+                    example: true
+                  results:
+                    type: array
+                    description: List of verification result records
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          description: Unique identifier for verification batch
+                          example: "ver-20230615-001"
+                        timestamp:
+                          type: string
+                          format: date-time
+                          description: When the verification was performed
+                          example: "2023-06-15T08:30:00Z"
+                        verifiedCount:
+                          type: integer
+                          description: Number of verified payments
+                          example: 42
+                        totalCount:
+                          type: integer
+                          description: Total number of participants
+                          example: 50
+                        totalAmount:
+                          type: number
+                          description: Total verified amount
+                          example: 25000
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Failed to retrieve verification results"
+
 components:
   schemas:
     VerificationResponse:
