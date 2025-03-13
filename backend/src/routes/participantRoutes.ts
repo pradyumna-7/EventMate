@@ -1,24 +1,8 @@
 import express, { Request, Response } from 'express';
 import Participant, { IParticipant } from '../models/Participant';
-import QRCode from 'qrcode';
+import { getAllParticipants } from '../controllers/participantController';
 
 const router = express.Router();
-
-// Generate QR code from participant data
-async function generateQRCode(participant: IParticipant): Promise<string> {
-  try {
-    const participantData = {
-      id: participant._id,
-      name: participant.name,
-      email: participant.email
-    };
-    
-    return await QRCode.toDataURL(JSON.stringify(participantData));
-  } catch (error) {
-    console.error('QR Code generation error:', error);
-    throw new Error('Failed to generate QR code');
-  }
-}
 
 // Create a new participant
 router.post('/', async (req: Request, res: Response) => {
@@ -35,16 +19,13 @@ router.post('/', async (req: Request, res: Response) => {
       return res.status(409).json({ message: 'Participant with this email already exists' });
     }
     
-    // Create new participant (without QR code first)
+    // Create new participant with null QR code
     const participant = new Participant({
       name,
       phoneNumber,
       email,
-      qrCode: ''
+      qrCode: null
     });
-    
-    // Generate QR code
-    participant.qrCode = await generateQRCode(participant);
     
     // Save participant
     await participant.save();
@@ -63,21 +44,7 @@ router.post('/', async (req: Request, res: Response) => {
 });
 
 // Get all participants
-router.get('/', async (req: Request, res: Response) => {
-  try {
-    const participants = await Participant.find();
-    res.status(200).json({
-      success: true,
-      count: participants.length,
-      data: participants
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch participants'
-    });
-  }
-});
+router.get('/', getAllParticipants);
 
 // Get a single participant
 router.get('/:id', async (req: Request, res: Response) => {
@@ -119,10 +86,6 @@ router.put('/:id', async (req: Request, res: Response) => {
         message: 'Participant not found'
       });
     }
-    
-    // Update QR code if participant data changed
-    participant.qrCode = await generateQRCode(participant);
-    await participant.save();
     
     res.status(200).json({
       success: true,

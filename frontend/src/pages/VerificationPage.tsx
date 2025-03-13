@@ -2,8 +2,8 @@
 
 import type React from "react"
 
-import { useState } from "react"
-import { Upload, FileText, AlertCircle, CheckCircle, RefreshCw, DollarSign } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Upload, FileText, AlertCircle, CheckCircle, RefreshCw, DollarSign, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -29,6 +29,37 @@ const VerificationPage = () => {
   const [participants, setParticipants] = useState<Participant[]>([])
   const [verificationComplete, setVerificationComplete] = useState(false)
   const [expectedAmount, setExpectedAmount] = useState<string>("")
+  const [activeTab, setActiveTab] = useState("upload")
+  const [searchTerm, setSearchTerm] = useState("")
+  const [sortBy, setSortBy] = useState<string | null>(null)
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
+
+  // Load participants when the component mounts or when navigating to results tab
+  useEffect(() => {
+    if (activeTab === "results") {
+      fetchParticipants()
+    }
+  }, [activeTab])
+
+  const fetchParticipants = async () => {
+    setIsLoading(true)
+    try {
+      const response = await fetch('http://localhost:5000/api/verification/results')
+      const data = await response.json()
+      
+      if (data.success && data.participants) {
+        setParticipants(data.participants)
+        setVerificationComplete(true)
+      } else {
+        console.error("Failed to fetch verification results:", data)
+      }
+    } catch (error) {
+      console.error("Error fetching participants:", error)
+      toast.error("Failed to load verification results")
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const handlePhonepeFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -63,7 +94,7 @@ const VerificationPage = () => {
       formData.append('expectedAmount', expectedAmount)
       
       // Call the backend API to process the files
-      const response = await fetch('http://localhost:5000/api/verify-payments', {
+      const response = await fetch('http://localhost:5000/api/verification/verify-payments', {
         method: 'POST',
         body: formData
       })
@@ -82,6 +113,9 @@ const VerificationPage = () => {
       setParticipants(data.participants)
       setVerificationComplete(true)
       toast.success(`Verification completed successfully! ${data.verifiedCount} of ${data.totalCount} payments verified.`)
+      
+      // Switch to the results tab
+      setActiveTab("results")
     } catch (error) {
       console.error("Verification error:", error)
       toast.error(`Error during verification process: ${error instanceof Error ? error.message : 'Unknown error'}`)
@@ -95,6 +129,38 @@ const VerificationPage = () => {
     toast.success("Participant manually verified")
   }
 
+  // Filter and sort participants for display
+  const filteredParticipants = participants
+    .filter(p => 
+      searchTerm ? 
+      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.phone.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.utrId.toLowerCase().includes(searchTerm.toLowerCase())
+      : true
+    )
+    .sort((a, b) => {
+      if (!sortBy) return 0;
+      
+      let valueA, valueB;
+      switch (sortBy) {
+        case 'name':
+          valueA = a.name.toLowerCase();
+          valueB = b.name.toLowerCase();
+          break;
+        case 'verified':
+          valueA = a.verified ? 1 : 0;
+          valueB = b.verified ? 1 : 0;
+          break;
+        default:
+          return 0;
+      }
+      
+      return sortOrder === 'asc' 
+        ? valueA < valueB ? -1 : valueA > valueB ? 1 : 0
+        : valueA > valueB ? -1 : valueA < valueB ? 1 : 0;
+    });
+
   return (
     <div className="space-y-6">
       <div>
@@ -102,10 +168,10 @@ const VerificationPage = () => {
         <p className="text-gray-500">Upload PhonePe statement and participants list to verify payments</p>
       </div>
 
-      <Tabs defaultValue="upload">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="upload">Upload Files</TabsTrigger>
-          <TabsTrigger value="results" disabled={!verificationComplete}>
+          <TabsTrigger value="results">
             Verification Results
           </TabsTrigger>
         </TabsList>
@@ -273,72 +339,110 @@ const VerificationPage = () => {
 
         <TabsContent value="results">
           <Card className="p-6">
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 space-y-2 md:space-y-0">
               <div>
                 <h3 className="text-lg font-medium">Verification Results</h3>
                 <p className="text-sm text-gray-500">
                   {participants.filter((p) => p.verified).length} of {participants.length} participants verified
                 </p>
               </div>
-              <Button variant="outline" onClick={() => window.print()}>
-                Export Results
-              </Button>
+              
+              <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2 w-full md:w-auto">
+                <div className="relative w-full md:w-64">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Search participants..."
+                    className="pl-8"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+                <Button variant="outline" onClick={() => window.print()}>
+                  Export Results
+                </Button>
+                <Button variant="outline" onClick={fetchParticipants}>
+                  <RefreshCw className="h-4 w-4 mr-1" />
+                  Refresh
+                </Button>
+              </div>
             </div>
 
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead>UTR ID</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {participants.length > 0 ? (
-                    participants.map((participant) => (
-                      <TableRow key={participant.id}>
-                        <TableCell>{participant.name || '—'}</TableCell>
-                        <TableCell>{participant.email || '—'}</TableCell>
-                        <TableCell>{participant.phone || '—'}</TableCell>
-                        <TableCell>{participant.utrId || '—'}</TableCell>
-                        <TableCell>₹{participant.amount || '0'}</TableCell>
-                        <TableCell>
-                          {participant.verified ? (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                              <CheckCircle className="mr-1 h-3 w-3" />
-                              Verified
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                              <AlertCircle className="mr-1 h-3 w-3" />
-                              Not Verified
-                            </span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {!participant.verified && (
-                            <Button variant="outline" size="sm" onClick={() => handleManualVerify(participant.id)}>
-                              Verify Manually
-                            </Button>
-                          )}
+            {isLoading ? (
+              <div className="flex justify-center items-center p-8">
+                <RefreshCw className="h-8 w-8 animate-spin text-gray-400" />
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead 
+                        className="cursor-pointer hover:bg-gray-100"
+                        onClick={() => {
+                          setSortBy('name')
+                          setSortOrder(sortBy === 'name' && sortOrder === 'asc' ? 'desc' : 'asc')
+                        }}
+                      >
+                        Name {sortBy === 'name' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}
+                      </TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Phone</TableHead>
+                      <TableHead>UTR ID</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead 
+                        className="cursor-pointer hover:bg-gray-100"
+                        onClick={() => {
+                          setSortBy('verified')
+                          setSortOrder(sortBy === 'verified' && sortOrder === 'asc' ? 'desc' : 'asc')
+                        }}
+                      >
+                        Status {sortBy === 'verified' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}
+                      </TableHead>
+                      <TableHead>Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredParticipants.length > 0 ? (
+                      filteredParticipants.map((participant) => (
+                        <TableRow key={participant.id}>
+                          <TableCell>{participant.name || '—'}</TableCell>
+                          <TableCell>{participant.email || '—'}</TableCell>
+                          <TableCell>{participant.phone || '—'}</TableCell>
+                          <TableCell>{participant.utrId || '—'}</TableCell>
+                          <TableCell>₹{participant.amount || '0'}</TableCell>
+                          <TableCell>
+                            {participant.verified ? (
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <CheckCircle className="mr-1 h-3 w-3" />
+                                Verified
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                <AlertCircle className="mr-1 h-3 w-3" />
+                                Not Verified
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {!participant.verified && (
+                              <Button variant="outline" size="sm" onClick={() => handleManualVerify(participant.id)}>
+                                Verify Manually
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center py-4">
+                          {searchTerm ? "No matching participants found" : "No participants found"}
                         </TableCell>
                       </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={7} className="text-center py-4">
-                        No participants found
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
           </Card>
         </TabsContent>
       </Tabs>

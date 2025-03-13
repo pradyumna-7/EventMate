@@ -1,4 +1,5 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from "react-hot-toast"
 import Navbar from "./components/Navbar"
 import Dashboard from "./pages/Dashboard"
@@ -7,7 +8,7 @@ import QRScanner from "./pages/QRScanner"
 import QRGenerator from "./pages/QRGenerator"
 import "./App.css"
 
-function App() {
+const App: React.FC = () => {
   return (
     <Router>
       <div className="min-h-screen h-full w-full bg-gray-50">
@@ -19,7 +20,7 @@ function App() {
             <Route path="/verify" element={<VerificationPage />} />
             <Route path="/generate-qr" element={<QRGenerator />} />
             <Route path="/scanner" element={<QRScanner />} />
-          </Routes>
+                      </Routes>
         </div>
       </div>
     </Router>

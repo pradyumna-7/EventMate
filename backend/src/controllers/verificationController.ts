@@ -1,6 +1,9 @@
 import fs from 'fs';
 import csv from 'csv-parser';
 import pdfParse from 'pdf-parse';
+import { Request, Response } from 'express';
+import Participant from '../models/Participant';
+import { storeParticipants } from './participantController';
 
 export interface PhonePeTransaction {
   date: string;
@@ -256,6 +259,9 @@ export async function verifyPayments(phonepeFilePath: string, participantsFilePa
       }
     });
 
+    // Store participants in MongoDB
+    await storeParticipants(participants);
+
     const verifiedCount = participants.filter(p => p.verified).length;
     console.log(`Verification complete: ${verifiedCount} of ${participants.length} verified`);
 
@@ -270,3 +276,110 @@ export async function verifyPayments(phonepeFilePath: string, participantsFilePa
     throw error;
   }
 }
+
+// Add search and sort functionality for the verification results
+export function searchAndSortResults(participants: ParticipantData[], searchTerm?: string, sortBy?: string, sortOrder: 'asc' | 'desc' = 'asc'): ParticipantData[] {
+  let results = [...participants];
+  
+  // Apply search if search term is provided
+  if (searchTerm && searchTerm.trim() !== '') {
+    const term = searchTerm.toLowerCase();
+    results = results.filter(p => 
+      p.name.toLowerCase().includes(term) || 
+      p.email.toLowerCase().includes(term) || 
+      p.phone.toLowerCase().includes(term) ||
+      p.utrId.toLowerCase().includes(term)
+    );
+  }
+  
+  // Apply sorting if sortBy is provided
+  if (sortBy) {
+    results.sort((a, b) => {
+      let valueA, valueB;
+      
+      switch (sortBy) {
+        case 'name':
+          valueA = a.name.toLowerCase();
+          valueB = b.name.toLowerCase();
+          break;
+        case 'phone':
+          valueA = a.phone;
+          valueB = b.phone;
+          break;
+        case 'verified':
+          valueA = a.verified ? 1 : 0;
+          valueB = b.verified ? 1 : 0;
+          break;
+        default:
+          valueA = a.id;
+          valueB = b.id;
+      }
+      
+      // Sort in ascending or descending order
+      if (sortOrder === 'asc') {
+        return valueA < valueB ? -1 : valueA > valueB ? 1 : 0;
+      } else {
+        return valueA > valueB ? -1 : valueA < valueB ? 1 : 0;
+      }
+    });
+  }
+  
+  return results;
+}
+
+// Get verification results with search and sorting
+export const getVerificationResults = async (req: Request, res: Response) => {
+  try {
+    const { search, sortBy, sortOrder } = req.query;
+    
+    // Get participants from database
+    let query = Participant.find();
+    
+    // Apply search if provided
+    if (search) {
+      const searchRegex = new RegExp(String(search), 'i');
+      query = query.or([
+        { name: searchRegex },
+        { email: searchRegex },
+        { phoneNumber: searchRegex }
+      ]);
+    }
+    
+    // Apply sorting if provided
+    if (sortBy) {
+      const sortDirection = sortOrder === 'desc' ? -1 : 1;
+      const sortOptions: Record<string, number> = {};
+      sortOptions[String(sortBy)] = sortDirection;
+      query = query.sort(sortOptions as any);
+    } else {
+      // Default sort by createdAt in descending order
+      query = query.sort({ createdAt: -1 });
+    }
+    
+    const participants = await query.exec();
+    
+    // Transform to ParticipantData format
+    const results: ParticipantData[] = participants.map((p, index) => ({
+      id: index + 1,
+      name: p.name,
+      email: p.email,
+      phone: p.phoneNumber,
+      utrId: '', // This might not be stored directly in the participant model
+      amount: 0, // This might not be stored directly in the participant model
+      verified: p.verified
+    }));
+    
+    return res.status(200).json({
+      success: true,
+      verifiedCount: results.filter(p => p.verified).length,
+      totalCount: results.length,
+      participants: results
+    });
+  } catch (error) {
+    console.error('Error fetching verification results:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Server error'
+    });
+  }
+};
