@@ -359,14 +359,13 @@ export const getVerificationResults = async (req: Request, res: Response) => {
     
     const participants = await query.exec();
     
-    // Transform to ParticipantData format
     const results: ParticipantData[] = participants.map((p, index) => ({
       id: index + 1,
       name: p.name,
       email: p.email,
       phone: p.phoneNumber,
-      utrId: p.utrId || '', // Use the stored UTR ID
-      amount: 0, // This might not be stored directly in the participant model
+      utrId: p.utrId || '', 
+      amount: p.amount, 
       verified: p.verified
     }));
     

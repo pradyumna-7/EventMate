@@ -17,6 +17,7 @@ export const storeParticipants = async (participants: ParticipantData[]): Promis
         existingParticipant.phoneNumber = participant.phone;
         existingParticipant.utrId = participant.utrId;
         existingParticipant.verified = participant.verified;
+        existingParticipant.amount = participant.amount || 0; // Update amount field
         await existingParticipant.save();
         storedParticipants.push(existingParticipant);
       } else {
@@ -27,7 +28,8 @@ export const storeParticipants = async (participants: ParticipantData[]): Promis
           email: participant.email,
           utrId: participant.utrId,
           qrCode: null,
-          verified: participant.verified
+          verified: participant.verified,
+          amount: participant.amount || 0 // Add amount field
         });
         storedParticipants.push(newParticipant);
       }
