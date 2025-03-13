@@ -6,7 +6,6 @@ import { verifyPayments } from '../controllers/verificationController';
 
 const router = express.Router();
 
-// Set up multer for file storage
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     const uploadDir = path.join(__dirname, '../../uploads');

@@ -1,0 +1,177 @@
+openapi: 3.0.0
+info:
+  title: EventMate API
+  description: API documentation for EventMate application
+  version: 1.0.0
+
+servers:
+  # - url: https://api.eventmate.com/v1
+  #   description: Production server
+  # - url: https://api-staging.eventmate.com/v1
+  #   description: Staging server
+  - url: http://localhost:3000
+    description: Local development
+
+tags:
+  - name: Verification
+    description: Payment verification related operations
+
+paths:
+  /verify-payments:
+    post:
+      summary: Verify payments from PhonePe statement against participants list
+      description: |
+        This endpoint takes a PhonePe PDF statement and a CSV file containing 
+        participant data, then verifies if participants have made the expected payment.
+        It matches UTR IDs from the PDF with those in the CSV and checks if the amounts match.
+      tags:
+        - Verification
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - phonepeFile
+                - participantsFile
+                - expectedAmount
+              properties:
+                phonepeFile:
+                  type: string
+                  format: binary
+                  description: PhonePe PDF statement containing transactions
+                participantsFile:
+                  type: string
+                  format: binary
+                  description: CSV file with participant details including UTR IDs
+                expectedAmount:
+                  type: number
+                  description: Expected payment amount for verification
+      responses:
+        '200':
+          description: Successful verification
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    VerificationResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Whether the API call was successful
+          example: true
+        verifiedCount:
+          type: integer
+          description: Number of participants with verified payments
+          example: 42
+        totalCount:
+          type: integer
+          description: Total number of participants
+          example: 50
+        participants:
+          type: array
+          description: List of participants with verification status
+          items:
+            $ref: '#/components/schemas/ParticipantData'
+    
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: "An error occurred processing your request"
+    
+    PhonePeTransaction:
+      type: object
+      properties:
+        date:
+          type: string
+          description: Transaction date
+          example: "01-01-2023"
+        utrId:
+          type: string
+          description: Unique Transaction Reference ID
+          example: "123456789012"
+        amount:
+          type: number
+          description: Transaction amount
+          example: 500
+        type:
+          type: string
+          enum: [CREDIT, DEBIT]
+          description: Transaction type
+          example: "CREDIT"
+    
+    ParticipantData:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Participant ID
+          example: 1
+        name:
+          type: string
+          description: Participant name
+          example: "John Doe"
+        email:
+          type: string
+          description: Participant email
+          example: "john.doe@example.com"
+        phone:
+          type: string
+          description: Participant phone number
+          example: "9876543210"
+        utrId:
+          type: string
+          description: UTR ID from payment
+          example: "123456789012"
+        amount:
+          type: number
+          description: Payment amount
+          example: 500
+        verified:
+          type: boolean
+          description: Whether payment is verified
+          example: true
+          
+  examples:
+    successfulVerification:
+      value:
+        success: true
+        verifiedCount: 42
+        totalCount: 50
+        participants:
+          - id: 1
+            name: "John Doe"
+            email: "john.doe@example.com"
+            phone: "9876543210"
+            utrId: "123456789012"
+            amount: 500
+            verified: true
+          - id: 2
+            name: "Jane Smith"
+            email: "jane.smith@example.com"
+            phone: "9876543211"
+            utrId: "123456789013"
+            amount: 500
+            verified: false
