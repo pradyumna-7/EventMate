@@ -3,6 +3,10 @@ info:
   title: EventMate API
   description: API documentation for EventMate application
   version: 1.0.0
+  contact:
+    name: EventMate Support
+    email: pradyumna_7@outlook.com
+    url: N/A
 
 servers:
   # - url: https://api.eventmate.com/v1
@@ -19,6 +23,7 @@ tags:
 paths:
   /verify-payments:
     post:
+      operationId: verifyPayments
       summary: Verify payments from PhonePe statement against participants list
       description: |
         This endpoint takes a PhonePe PDF statement and a CSV file containing 
@@ -55,23 +60,36 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/VerificationResponse'
+              example:
+                $ref: '#/components/examples/successfulVerification'
         '400':
           description: Bad request
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Both PhonePe statement and participants list are required"
         '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Failed to verify payments"
 
 components:
   schemas:
     VerificationResponse:
       type: object
+      required:
+        - success
+        - verifiedCount
+        - totalCount
+        - participants
       properties:
         success:
           type: boolean
@@ -93,6 +111,9 @@ components:
     
     ErrorResponse:
       type: object
+      required:
+        - success
+        - message
       properties:
         success:
           type: boolean
@@ -103,6 +124,11 @@ components:
     
     PhonePeTransaction:
       type: object
+      required:
+        - date
+        - utrId
+        - amount
+        - type
       properties:
         date:
           type: string
@@ -124,6 +150,14 @@ components:
     
     ParticipantData:
       type: object
+      required:
+        - id
+        - name
+        - email
+        - phone
+        - utrId
+        - amount
+        - verified
       properties:
         id:
           type: integer
@@ -175,3 +209,13 @@ components:
             utrId: "123456789013"
             amount: 500
             verified: false
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for authentication
+
+security:
+  - BearerAuth: []
