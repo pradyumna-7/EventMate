@@ -1,18 +1,40 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EventMate API Documentation</title>
-    <base href="/EventMate/">
-    <script src="https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js"></script>
+    <!-- Remove the base tag to avoid path issues -->
+    <script src="https://cdn.jsdelivr.net/npm/redoc@2.0.0-rc.55/bundles/redoc.standalone.js"></script>
     <style>
         body {
             margin: 0;
             padding: 0;
+            height: 100vh;
         }
     </style>
 </head>
 <body>
+    <!-- Use relative path without leading slash -->
     <redoc spec-url="openapi.yaml" hide-loading></redoc>
+    
+    <!-- Fallback content in case ReDoc fails to load -->
+    <div id="fallback" style="display: none; padding: 20px; text-align: center;">
+        <h1>EventMate API Documentation</h1>
+        <p>Unable to load ReDoc. Please try the following:</p>
+        <ul style="list-style: none; padding: 0;">
+            <li><a href="test.html">Test if GitHub Pages is working</a></li>
+            <li><a href="https://raw.githubusercontent.com/Pradyumna-7/EventMate/main/docs/openapi.yaml">View raw OpenAPI specification</a></li>
+        </ul>
+    </div>
+    
+    <script>
+        // Show fallback after 5 seconds if ReDoc hasn't loaded
+        setTimeout(function() {
+            if (!document.querySelector('redoc').shadowRoot) {
+                document.getElementById('fallback').style.display = 'block';
+            }
+        }, 5000);
+    </script>
 </body>
 </html>

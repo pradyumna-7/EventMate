@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EventMate API - Raw Documentation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        h1 {
+            border-bottom: 1px solid #eaecef;
+            padding-bottom: 10px;
+        }
+        .links {
+            margin: 20px 0;
+        }
+        .links a {
+            margin-right: 15px;
+        }
+    </style>
+</head>
+<body>
+    <h1>EventMate API Documentation - Raw View</h1>
+    
+    <div class="links">
+        <a href="index.html">Try ReDoc View</a>
+        <a href="test.html">Test Page</a>
+    </div>
+    
+    <div id="content">Loading API documentation...</div>
+    
+    <script>
+        fetch('openapi.yaml')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
+                }
+                return response.text();
+            })
+            .then(text => {
+                document.getElementById('content').innerHTML = `<pre>${text.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>`;
+            })
+            .catch(error => {
+                document.getElementById('content').innerHTML = `
+                    <h2>Error Loading Documentation</h2>
+                    <p>Failed to load the OpenAPI documentation. Error details:</p>
+                    <pre style="color: red;">${error.toString()}</pre>
+                    <h3>Troubleshooting Steps:</h3>
+                    <ol>
+                        <li>Check if <a href="openapi.yaml" target="_blank">openapi.yaml</a> exists and is accessible</li>
+                        <li>Verify the GitHub Pages deployment is complete</li>
+                        <li>Check browser console for additional errors</li>
+                    </ol>`;
+            });
+    </script>
+</body>
+</html>

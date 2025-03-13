@@ -1,0 +1,20 @@
+# Jekyll configuration file for GitHub Pages
+title: EventMate API Documentation
+description: API documentation for EventMate application
+
+# Specify which files should be published
+include:
+  - "*.html"
+  - "*.yaml"
+  - "*.yml"
+  - "*.json"
+  - ".nojekyll"
+
+# Set content type for YAML files
+defaults:
+  -
+    scope:
+      path: "*.yaml"
+    values:
+      layout: null
+      content_type: "text/yaml"
