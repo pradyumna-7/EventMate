@@ -2,7 +2,7 @@ import express, { Request, Response } from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
-import { verifyPayments } from '../controllers/verificationController';
+import { verifyPayments, getVerificationResults } from '../controllers/verificationController';
 
 const router = express.Router();
 
@@ -74,5 +74,8 @@ router.post(
     }
   }
 );
+
+// Add the missing GET endpoint for verification results
+router.get('/results', getVerificationResults);
 
 export default router;

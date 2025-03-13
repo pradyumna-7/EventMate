@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import toast from "react-hot-toast"
+import { useLocation } from "react-router-dom"
 
 interface Participant {
   id: number
@@ -23,13 +24,17 @@ interface Participant {
 }
 
 const VerificationPage = () => {
+  const location = useLocation()
+  const queryParams = new URLSearchParams(location.search)
+  const tabParam = queryParams.get('tab')
+  
   const [isLoading, setIsLoading] = useState(false)
   const [phonepeFile, setPhonepeFile] = useState<File | null>(null)
   const [participantsFile, setParticipantsFile] = useState<File | null>(null)
   const [participants, setParticipants] = useState<Participant[]>([])
   const [verificationComplete, setVerificationComplete] = useState(false)
   const [expectedAmount, setExpectedAmount] = useState<string>("")
-  const [activeTab, setActiveTab] = useState("upload")
+  const [activeTab, setActiveTab] = useState(tabParam === 'results' ? "results" : "upload")
   const [searchTerm, setSearchTerm] = useState("")
   const [sortBy, setSortBy] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
@@ -44,7 +49,16 @@ const VerificationPage = () => {
   const fetchParticipants = async () => {
     setIsLoading(true)
     try {
-      const response = await fetch('http://localhost:5000/api/verification/results')
+      // Adjust the URL if your backend is running on a different port
+      // You can also set this in an environment variable
+      const backendUrl = 'http://localhost:5000';
+      
+      const response = await fetch(`${backendUrl}/api/verification/results`)
+      
+      if (!response.ok) {
+        throw new Error(`Server responded with status: ${response.status}`);
+      }
+      
       const data = await response.json()
       
       if (data.success && data.participants) {
@@ -52,10 +66,11 @@ const VerificationPage = () => {
         setVerificationComplete(true)
       } else {
         console.error("Failed to fetch verification results:", data)
+        toast.error("Failed to load verification results")
       }
     } catch (error) {
       console.error("Error fetching participants:", error)
-      toast.error("Failed to load verification results")
+      toast.error("Failed to load verification results. Please check if the backend server is running.")
     } finally {
       setIsLoading(false)
     }
@@ -87,14 +102,16 @@ const VerificationPage = () => {
     setIsLoading(true)
 
     try {
-      // In a real app, send these files to your backend
+      // Use the same backendUrl here
+      const backendUrl = 'http://localhost:5000';
+      
       const formData = new FormData()
       formData.append('phonepeFile', phonepeFile)
       formData.append('participantsFile', participantsFile)
       formData.append('expectedAmount', expectedAmount)
       
       // Call the backend API to process the files
-      const response = await fetch('http://localhost:5000/api/verification/verify-payments', {
+      const response = await fetch(`${backendUrl}/api/verification/verify-payments`, {
         method: 'POST',
         body: formData
       })

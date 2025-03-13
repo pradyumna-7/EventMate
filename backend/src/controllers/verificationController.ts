@@ -341,7 +341,8 @@ export const getVerificationResults = async (req: Request, res: Response) => {
       query = query.or([
         { name: searchRegex },
         { email: searchRegex },
-        { phoneNumber: searchRegex }
+        { phoneNumber: searchRegex },
+        { utrId: searchRegex }
       ]);
     }
     
@@ -364,7 +365,7 @@ export const getVerificationResults = async (req: Request, res: Response) => {
       name: p.name,
       email: p.email,
       phone: p.phoneNumber,
-      utrId: '', // This might not be stored directly in the participant model
+      utrId: p.utrId || '', // Use the stored UTR ID
       amount: 0, // This might not be stored directly in the participant model
       verified: p.verified
     }));

@@ -23,6 +23,12 @@ if (!fs.existsSync(uploadsDir)) {
 app.use('/api/participants', participantRoutes);
 app.use('/api/verification', verificationRoutes);
 
+// For debugging - log all incoming requests
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  next();
+});
+
 // Error handling middleware
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error(err.stack);

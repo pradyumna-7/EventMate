@@ -15,6 +15,7 @@ export const storeParticipants = async (participants: ParticipantData[]): Promis
         // Update existing participant
         existingParticipant.name = participant.name;
         existingParticipant.phoneNumber = participant.phone;
+        existingParticipant.utrId = participant.utrId;
         existingParticipant.verified = participant.verified;
         await existingParticipant.save();
         storedParticipants.push(existingParticipant);
@@ -24,6 +25,7 @@ export const storeParticipants = async (participants: ParticipantData[]): Promis
           name: participant.name,
           phoneNumber: participant.phone,
           email: participant.email,
+          utrId: participant.utrId,
           qrCode: null,
           verified: participant.verified
         });

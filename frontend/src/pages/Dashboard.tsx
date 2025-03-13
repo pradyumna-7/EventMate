@@ -97,6 +97,10 @@ const Dashboard = () => {
               <Scan className="h-5 w-5 text-purple-500 mr-2" />
               <span>Scan QR Codes</span>
             </Link>
+            <Link to="/verify?tab=results" className="flex items-center p-3 bg-yellow-50 rounded-lg hover:bg-yellow-100">
+              <Users className="h-5 w-5 text-yellow-500 mr-2" />
+              <span>View All Participants</span>
+            </Link>
           </div>
         </Card>
 

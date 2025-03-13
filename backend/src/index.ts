@@ -1,48 +1,32 @@
-import express, { Express } from 'express';
+import app from './app';
 import mongoose from 'mongoose';
-import cors from 'cors';
 import dotenv from 'dotenv';
-import participantRoutes from './routes/participantRoutes';
-import verificationRoutes from './routes/verificationRoutes';
-import path from 'path';
 
-// Load environment variables
 dotenv.config();
 
-// Create Express app
-const app: Express = express();
-const port = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5000;
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/eventmate';
 
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Create uploads directory if it doesn't exist
-const uploadsDir = path.join(__dirname, '../uploads');
-const fs = require('fs');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
-// MongoDB Connection
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/eventmate';
-
+// Connect to MongoDB
 mongoose
-  .connect(MONGO_URI)
-  .then(() => console.log('MongoDB connected successfully!'))
-  .catch((err) => console.error('MongoDB connection error:', err));
+  .connect(MONGODB_URI)
+  .then(() => {
+    console.log('Connected to MongoDB');
+    
+    // Start the Express server
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+      console.log(`API available at http://localhost:${PORT}/api/`);
+    });
+  })
+  .catch((err) => {
+    console.error('MongoDB connection error:', err);
+    process.exit(1);
+  });
 
-// Routes
-app.use('/api/participants', participantRoutes);
-app.use('/api', verificationRoutes);
-
-// Root route
-app.get('/', (req, res) => {
-  res.send('EventMate API is running!');
-});
-
-// Start server
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+// Handle server shutdown
+process.on('SIGINT', async () => {
+  await mongoose.connection.close();
+  console.log('Server closed. Database connection disconnected.');
+  process.exit(0);
 });

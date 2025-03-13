@@ -4,6 +4,7 @@ export interface IParticipant extends Document {
   name: string;
   phoneNumber: string;
   email: string;
+  utrId: string | null;
   qrCode: string | null;
   verified: boolean;
   createdAt: Date;
@@ -29,6 +30,11 @@ const participantSchema = new Schema<IParticipant>({
       /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
       'Please provide a valid email',
     ],
+  },
+  utrId: {
+    type: String,
+    required: false,
+    default: null,
   },
   qrCode: {
     type: String,
