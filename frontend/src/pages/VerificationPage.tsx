@@ -165,6 +165,14 @@ const VerificationPage = () => {
           valueA = a.name.toLowerCase();
           valueB = b.name.toLowerCase();
           break;
+        case 'phone':
+          valueA = a.phone.toLowerCase();
+          valueB = b.phone.toLowerCase();
+          break;
+        case 'amount':
+          valueA = a.amount;
+          valueB = b.amount;
+          break;
         case 'verified':
           valueA = a.verified ? 1 : 0;
           valueB = b.verified ? 1 : 0;
@@ -173,6 +181,14 @@ const VerificationPage = () => {
           return 0;
       }
       
+      // For numerical values
+      if (typeof valueA === 'number' && typeof valueB === 'number') {
+        return sortOrder === 'asc' 
+          ? valueA - valueB 
+          : valueB - valueA;
+      }
+      
+      // For string values
       return sortOrder === 'asc' 
         ? valueA < valueB ? -1 : valueA > valueB ? 1 : 0
         : valueA > valueB ? -1 : valueA < valueB ? 1 : 0;
@@ -374,6 +390,31 @@ const VerificationPage = () => {
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
+                
+                {/* Sorting Controls */}
+                <div className="flex gap-2">
+                  <select 
+                    className="px-3 py-2 border rounded-md text-sm bg-white"
+                    value={sortBy || ''}
+                    onChange={(e) => setSortBy(e.target.value || null)}
+                  >
+                    <option value="">Sort by...</option>
+                    <option value="name">Name</option>
+                    <option value="phone">Phone</option>
+                    <option value="amount">Amount</option>
+                    <option value="verified">Status</option>
+                  </select>
+                  
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                    className="flex items-center"
+                  >
+                    {sortOrder === 'asc' ? 'Ascending ↑' : 'Descending ↓'}
+                  </Button>
+                </div>
+                
                 <Button variant="outline" onClick={() => window.print()}>
                   Export Results
                 </Button>
@@ -403,9 +444,25 @@ const VerificationPage = () => {
                         Name {sortBy === 'name' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}
                       </TableHead>
                       <TableHead>Email</TableHead>
-                      <TableHead>Phone</TableHead>
+                      <TableHead 
+                        className="cursor-pointer hover:bg-gray-100"
+                        onClick={() => {
+                          setSortBy('phone')
+                          setSortOrder(sortBy === 'phone' && sortOrder === 'asc' ? 'desc' : 'asc')
+                        }}
+                      >
+                        Phone {sortBy === 'phone' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}
+                      </TableHead>
                       <TableHead>UTR ID</TableHead>
-                      <TableHead>Amount</TableHead>
+                      <TableHead 
+                        className="cursor-pointer hover:bg-gray-100"
+                        onClick={() => {
+                          setSortBy('amount')
+                          setSortOrder(sortBy === 'amount' && sortOrder === 'asc' ? 'desc' : 'asc')
+                        }}
+                      >
+                        Amount {sortBy === 'amount' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}
+                      </TableHead>
                       <TableHead 
                         className="cursor-pointer hover:bg-gray-100"
                         onClick={() => {
