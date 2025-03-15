@@ -9,7 +9,6 @@ router.get('/verified', (req: Request, res: Response) => {
   console.log('Getting verified participants only');
   return getAllParticipants(req, res);
 });
-
 // Generate QR codes for participants
 router.post('/generate-qr', generateQRCodes);
 
