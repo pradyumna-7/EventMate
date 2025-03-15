@@ -137,6 +137,69 @@ paths:
                 success: false
                 message: "Failed to retrieve verification results"
 
+  /verify/{id}:
+    put:
+      operationId: updateVerificationStatus
+      summary: Update participant verification status
+      description: Updates the verification status of a specific participant by ID
+      tags:
+        - Verification
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Participant ID to update
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - verified
+              properties:
+                verified:
+                  type: boolean
+                  description: New verification status
+                  example: true
+      responses:
+        '200':
+          description: Verification status successfully updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Verification status updated successfully"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Participant not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Participant not found"
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
 components:
   schemas:
     VerificationResponse:
