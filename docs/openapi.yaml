@@ -267,6 +267,96 @@ paths:
                 success: false
                 message: "Failed to retrieve verified participants"
 
+  /participants/generate-qr:
+    post:
+      operationId: generateQRCodes
+      summary: Generate QR codes for participants
+      description: Generates unique QR codes for verified participants that can be used for event check-in
+      tags:
+        - Participants
+      responses:
+        '200':
+          description: Successfully generated QR codes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    description: Whether the API call was successful
+                    example: true
+                  message:
+                    type: string
+                    example: "QR codes successfully generated for 42 participants"
+                  count:
+                    type: integer
+                    description: Number of QR codes generated
+                    example: 42
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "No verified participants found"
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Failed to generate QR codes"
+                
+  /participants/send-qr:
+    post:
+      operationId: sendQRCodes
+      summary: Send QR codes to participants via email
+      description: Sends the generated QR codes to verified participants via email for event entry
+      tags:
+        - Participants
+      responses:
+        '200':
+          description: Successfully sent QR codes via email
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    description: Whether the API call was successful
+                    example: true
+                  message:
+                    type: string
+                    example: "QR codes successfully sent to 42 participants"
+                  sentCount:
+                    type: integer
+                    description: Number of emails sent
+                    example: 42
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "No QR codes found to send"
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Failed to send QR codes via email"
+
 components:
   schemas:
     VerificationResponse:
