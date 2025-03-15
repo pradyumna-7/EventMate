@@ -208,7 +208,9 @@ const QRGenerator = () => {
       // Update participants to mark QR as generated
       setParticipants((prev) =>
         prev.map((p) => {
-          const resultItem = data.data.find(r => r.id === p._id);
+            const resultItem: QRGenerationResult | undefined = data.data.find(
+            (r: QRGenerationResult) => r.id === p._id
+            );
           if (resultItem && resultItem.success && resultItem.qrCode) {
             return { ...p, qrCode: resultItem.qrCode };
           }
