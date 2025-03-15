@@ -355,3 +355,14 @@ export const updateVerificationStatus = async (req: Request, res: Response) => {
     return res.status(500).json({ success: false, message: 'Failed to update verification status' });
   }
 };
+
+export const deleteAllParticipants = async (req: Request, res: Response) => {
+  try {
+    await Participant.deleteMany({});
+    return res.status(200).json({ success: true });
+  } catch (error) {
+    console.error('Error deleting all participants:', error);
+    return res.status(500).json({ success: false, message: 'Failed to delete all participants' });
+  }
+}
+

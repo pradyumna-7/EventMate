@@ -2,7 +2,7 @@ import express, { Request, Response } from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
-import { verifyPayments, getVerificationResults, updateVerificationStatus } from '../controllers/verificationController';
+import { verifyPayments, getVerificationResults, updateVerificationStatus, deleteAllParticipants } from '../controllers/verificationController';
 
 const router = express.Router();
 
@@ -79,5 +79,6 @@ router.post(
 router.get('/results', getVerificationResults);
 
 router.put('/verify/:id', updateVerificationStatus)
+router.delete('/delete', deleteAllParticipants)
 
 export default router;

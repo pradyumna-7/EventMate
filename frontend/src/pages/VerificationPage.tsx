@@ -3,16 +3,17 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { Upload, FileText, AlertCircle, CheckCircle, RefreshCw, DollarSign, Search } from "lucide-react"
+import { Upload, FileText, AlertCircle, CheckCircle, RefreshCw, IndianRupee, Search, MinusCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Table, TableBody, TableCell, TableHead, TableRow, TableHeader } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import toast from "react-hot-toast"
 import { useLocation } from "react-router-dom"
 import axios from "axios"
+import { AnimatePresence, motion } from "framer-motion";
 
 interface Participant {
   id: number
@@ -41,6 +42,8 @@ const VerificationPage = () => {
   const [searchTerm, setSearchTerm] = useState("")
   const [sortBy, setSortBy] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
+  const [isWarningModalOpen, setIsWarningModalOpen] = useState(false);
+
 
   // Load participants when the component mounts or when navigating to results tab
   useEffect(() => {
@@ -190,6 +193,18 @@ const VerificationPage = () => {
         : valueA > valueB ? -1 : valueA < valueB ? 1 : 0;
     });
 
+  const deleteParticipants = async () => {
+    try {
+      await axios.delete(`${backendUrl}/api/verification/delete`);
+      setParticipants([]);
+      toast.success("All participants deleted successfully");
+    }
+    catch (error) {
+      console.error("Error deleting participants:", error);
+      toast.error(`Failed to delete participants: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -199,8 +214,8 @@ const VerificationPage = () => {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="upload">Upload Files</TabsTrigger>
-          <TabsTrigger value="results">
+          <TabsTrigger value="upload" className="cursor-pointer">Upload Files</TabsTrigger>
+          <TabsTrigger value="results" className="cursor-pointer">
             Verification Results
           </TabsTrigger>
         </TabsList>
@@ -213,7 +228,7 @@ const VerificationPage = () => {
                 <Label htmlFor="expected-amount">Expected Payment Amount (₹)</Label>
                 <div className="flex max-w-md">
                   <span className="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-l-md">
-                    <DollarSign className="h-4 w-4" />
+                    <IndianRupee className="h-6 w-6 "/>
                   </span>
                   <Input
                     id="expected-amount"
@@ -348,7 +363,7 @@ const VerificationPage = () => {
               <Button
                 onClick={handleVerification}
                 disabled={!phonepeFile || !participantsFile || !expectedAmount || isLoading}
-                className="flex items-center"
+                className="flex items-center cursor-pointer"
               >
                 {isLoading ? (
                   <>
@@ -390,7 +405,7 @@ const VerificationPage = () => {
                 {/* Sorting Controls */}
                 <div className="flex gap-2">
                   <select 
-                    className="px-3 py-2 border rounded-md text-sm bg-white"
+                    className="px-3 py-2 border rounded-md text-sm bg-white cursor-pointer"
                     value={sortBy || ''}
                     onChange={(e) => setSortBy(e.target.value || null)}
                   >
@@ -405,21 +420,61 @@ const VerificationPage = () => {
                     variant="outline" 
                     size="sm"
                     onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                    className="flex items-center"
+                    className="flex items-center cursor-pointer"
                   >
                     {sortOrder === 'asc' ? 'Ascending ↑' : 'Descending ↓'}
                   </Button>
                 </div>
                 
-                <Button variant="outline" onClick={() => window.print()}>
-                  Export Results
+                <Button
+                onClick={() => setIsWarningModalOpen(true)}
+                className="bg-gray-900 hover:bg-red-800 text-white shadow-lg transition-transform transform hover:scale-105 cursor-pointer"
+                >
+                <MinusCircle className="mr-2 h-4 w-4" />
+                    Delete All
                 </Button>
-                <Button variant="outline" onClick={fetchParticipants}>
+                <Button variant="outline" onClick={fetchParticipants} className="cursor-pointer">
                   <RefreshCw className="h-4 w-4 mr-1" />
                   Refresh
                 </Button>
               </div>
             </div>
+            <AnimatePresence>
+        {isWarningModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center"
+          >
+            <div className="absolute inset-0 bg-black opacity-50"></div>
+            <motion.div
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.9 }}
+              className="bg-slate-100 p-6 rounded-lg shadow-xl z-10"
+            >
+                <h2 className="text-gray-800 text-2xl font-bold mb-4">Attention</h2>
+                <p className="text-gray-800 text-lg mb-4">
+                This will remove all verified and un-verified participants. <br/> 
+                Are you sure
+                you want to proceed?
+                </p>
+              <div className="flex justify-end space-x-2">
+                <Button onClick={() => setIsWarningModalOpen(false)} className="cursor-pointer">
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => deleteParticipants()}
+                  className="bg-red-800 hover:bg-slate-950 text-white cursor-pointer"
+                >
+                  Delete
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
             {isLoading ? (
               <div className="flex justify-center items-center p-8">
