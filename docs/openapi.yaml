@@ -19,6 +19,8 @@ servers:
 tags:
   - name: Verification
     description: Payment verification related operations
+  - name: Participants
+    description: Operations related to participant management
 
 paths:
   /verify-payments:
@@ -230,6 +232,40 @@ paths:
               example:
                 success: false
                 message: "Failed to delete participants"
+
+  /participants/verified:
+    get:
+      operationId: getVerifiedParticipants
+      summary: Get verified participants
+      description: Retrieves the list of participants who have been verified
+      tags:
+        - Participants
+      responses:
+        '200':
+          description: Successfully retrieved verified participants
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    description: Whether the API call was successful
+                    example: true
+                  participants:
+                    type: array
+                    description: List of verified participants
+                    items:
+                      $ref: '#/components/schemas/ParticipantData'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Failed to retrieve verified participants"
 
 components:
   schemas:
