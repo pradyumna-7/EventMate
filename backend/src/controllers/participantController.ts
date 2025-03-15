@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import Participant, { IParticipant } from '../models/Participant';
 import { ParticipantData } from './verificationController';
 import QRCode from 'qrcode';
+import nodemailer from 'nodemailer';
 
 // Store participants from verification results to MongoDB
 export const storeParticipants = async (participants: ParticipantData[]): Promise<IParticipant[]> => {
@@ -161,6 +162,99 @@ export const generateQRCodes = async (req: Request, res: Response) => {
     return res.status(500).json({
       success: false,
       message: 'Failed to generate QR codes'
+    });
+  }
+};
+
+// Send QR codes to participants via email
+export const sendQRCodes = async (req: Request, res: Response) => {
+  try {
+    // Find all verified participants with generated QR codes
+    const participants = await Participant.find({ 
+      verified: true,
+      qrCode: { $ne: null }
+    });
+
+    if (participants.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No verified participants with QR codes found'
+      });
+    }
+
+    // Configure nodemailer
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.EMAIL_PORT || '587'),
+      secure: process.env.EMAIL_SECURE === 'true',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASSWORD,
+      },
+    });
+
+    const results = [];
+
+    // Send emails to each participant
+    for (const participant of participants) {
+      try {
+        // Convert base64 QR code to buffer for attachment
+        const qrCodeData = participant.qrCode!.split(';base64,').pop() || '';
+        const qrBuffer = Buffer.from(qrCodeData, 'base64');
+
+        // Send email with QR code
+        await transporter.sendMail({
+          from: process.env.EMAIL_FROM || 'EventMate <noreply@eventmate.com>',
+          to: participant.email,
+          subject: 'Your Event QR Code',
+          html: `
+            <h1>Hello ${participant.name}!</h1>
+            <p>Thank you for registering for our event. Please find your QR code attached to this email.</p>
+            <p>Please present this QR code at the event entrance for quick check-in.</p>
+            <p>We look forward to seeing you!</p>
+            <p>Best regards,<br>The EventMate Team</p>
+          `,
+          attachments: [
+            {
+              filename: `qrcode-${participant.name}.png`,
+              content: qrBuffer,
+              contentType: 'image/png'
+            }
+          ]
+        });
+
+        results.push({
+          id: participant._id,
+          email: participant.email,
+          success: true,
+          message: 'QR code sent successfully'
+        });
+      } catch (error) {
+        console.error(`Error sending email to ${participant.email}:`, error);
+        results.push({
+          id: participant._id,
+          email: participant.email,
+          success: false,
+          message: error instanceof Error ? error.message : 'Failed to send email'
+        });
+      }
+    }
+
+    // Count successes and failures
+    const successCount = results.filter(r => r.success).length;
+    const failureCount = results.length - successCount;
+
+    return res.status(200).json({
+      success: true,
+      message: `QR codes sent to ${successCount} participants (${failureCount} failed)`,
+      data: results
+    });
+  } catch (error) {
+    console.error('Error sending QR codes:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error while sending QR codes',
+      error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 };

@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import Participant, { IParticipant } from '../models/Participant';
-import { getAllParticipants, generateQRCodes } from '../controllers/participantController';
+import { getAllParticipants, generateQRCodes, sendQRCodes } from '../controllers/participantController';
 
 const router = express.Router();
 
@@ -13,5 +13,7 @@ router.get('/verified', (req: Request, res: Response) => {
 // Generate QR codes for participants
 router.post('/generate-qr', generateQRCodes);
 
+// Send QR codes to participants via email
+router.post('/send-qr', sendQRCodes);
 
 export default router;

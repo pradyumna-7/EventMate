@@ -234,8 +234,31 @@ const QRGenerator = () => {
     }
   }
 
-  const sendQRCodes = () => {
-    toast.success("QR codes sent successfully!")
+  const sendQRCodes = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`${backendUrl}/api/participants/send-qr`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        toast.success(data.message || "QR codes sent successfully!");
+      } else {
+        throw new Error(data.message || "Failed to send QR codes");
+      }
+    } catch (error) {
+      console.error("Error sending QR codes:", error);
+      toast.error(`Failed to send QR codes: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   const downloadQRCodes = () => {
@@ -287,8 +310,8 @@ const QRGenerator = () => {
 
       <Tabs defaultValue="participants" value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="participants">Select Participants</TabsTrigger>
-          <TabsTrigger value="generated" disabled={generatedQRs.length === 0}>
+          <TabsTrigger value="participants" className="cursor-pointer">Select Participants</TabsTrigger>
+          <TabsTrigger value="generated" className="cursor-pointer" disabled={generatedQRs.length === 0}>
             Generated QR Codes
           </TabsTrigger>
         </TabsList>
@@ -408,7 +431,7 @@ const QRGenerator = () => {
               <Button
                 onClick={generateQRCodes}
                 disabled={selectedParticipants.length === 0 || isLoading}
-                className="flex items-center"
+                className="flex items-center cursor-pointer"
               >
                 {isLoading ? (
                   <>
@@ -461,7 +484,7 @@ const QRGenerator = () => {
                         <p className="text-sm text-gray-500">{participant?.phoneNumber}</p>
                       </div>
                       <div className="mt-3 flex space-x-2">
-                        <Button variant="outline" size="sm" onClick={() => {
+                        <Button variant="outline" className="cursor-pointer" size="sm" onClick={() => {
                           // Create a download link for the QR code
                           const link = document.createElement('a');
                           link.href = qr.qrCode;
