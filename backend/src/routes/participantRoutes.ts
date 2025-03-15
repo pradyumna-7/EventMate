@@ -43,6 +43,13 @@ router.post('/', async (req: Request, res: Response) => {
   }
 });
 
+// Get all verified participants - MUST come before /:id route
+router.get('/verified', (req: Request, res: Response) => {
+  req.query.verified = 'true';
+  console.log('Getting verified participants only');
+  return getAllParticipants(req, res);
+});
+
 // Get all participants
 router.get('/', getAllParticipants);
 

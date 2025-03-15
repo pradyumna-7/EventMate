@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -10,58 +10,69 @@ import { QrCode, Download, Send, RefreshCw } from "lucide-react"
 import toast from "react-hot-toast"
 
 interface Participant {
-  id: number
+  _id: string
   name: string
   email: string
-  phone: string
-  utrId: string
+  phoneNumber: string
+  utrId?: string
   verified: boolean
-  qrGenerated: boolean
+  qrCode: string | null
 }
 
 const QRGenerator = () => {
   const [isLoading, setIsLoading] = useState(false)
-  const [participants, setParticipants] = useState<Participant[]>([
-    {
-      id: 1,
-      name: "Rahul Sharma",
-      email: "rahul@example.com",
-      phone: "9876543210",
-      utrId: "UTR123456789",
-      verified: true,
-      qrGenerated: false,
-    },
-    {
-      id: 2,
-      name: "Priya Patel",
-      email: "priya@example.com",
-      phone: "9876543211",
-      utrId: "UTR123456790",
-      verified: true,
-      qrGenerated: false,
-    },
-    {
-      id: 3,
-      name: "Neha Singh",
-      email: "neha@example.com",
-      phone: "9876543213",
-      utrId: "UTR123456792",
-      verified: true,
-      qrGenerated: false,
-    },
-  ])
-  const [selectedParticipants, setSelectedParticipants] = useState<number[]>([])
-  const [generatedQRs, setGeneratedQRs] = useState<{ id: number; qrCode: string }[]>([])
+  const [participants, setParticipants] = useState<Participant[]>([])
+  const [selectedParticipants, setSelectedParticipants] = useState<string[]>([])
+  const [generatedQRs, setGeneratedQRs] = useState<{ id: string; qrCode: string }[]>([])
+  const [fetchingParticipants, setFetchingParticipants] = useState(true)
+
+  const backendUrl = 'http://localhost:5000';
+
+  useEffect(() => {
+    const fetchVerifiedParticipants = async () => {
+      setFetchingParticipants(true)
+      try {
+        const response = await fetch(`${backendUrl}/api/participants/verified`, {
+          headers: {
+            'Accept': 'application/json'
+          }
+        })
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('API error response:', errorText);
+          throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log('Verified participants:', data);
+        
+        if (data.success && Array.isArray(data.data)) {
+          setParticipants(data.data);
+        } else {
+          toast.error('Invalid response format from API');
+          console.error('Invalid response format:', data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch verified participants:', error);
+        toast.error(`Failed to load participants: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      } finally {
+        setFetchingParticipants(false);
+      }
+    };
+
+    fetchVerifiedParticipants();
+  }, [])
 
   const toggleSelectAll = () => {
     if (selectedParticipants.length === participants.length) {
       setSelectedParticipants([])
     } else {
-      setSelectedParticipants(participants.map((p) => p.id))
+      setSelectedParticipants(participants.map((p) => p._id))
     }
   }
 
-  const toggleSelect = (id: number) => {
+  const toggleSelect = (id: string) => {
     if (selectedParticipants.includes(id)) {
       setSelectedParticipants(selectedParticipants.filter((pId) => pId !== id))
     } else {
@@ -97,7 +108,7 @@ const QRGenerator = () => {
           qrCode: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
             JSON.stringify({
               id,
-              name: participants.find((p) => p.id === id)?.name,
+              name: participants.find((p) => p._id === id)?.name,
               verified: true,
               hash: `${id}-${Date.now()}`,
             }),
@@ -109,7 +120,7 @@ const QRGenerator = () => {
 
       // Update participants to mark QR as generated
       setParticipants((prev) =>
-        prev.map((p) => (selectedParticipants.includes(p.id) ? { ...p, qrGenerated: true } : p)),
+        prev.map((p) => (selectedParticipants.includes(p._id) ? { ...p, qrCode: newQRs.find(qr => qr.id === p._id)?.qrCode || null } : p)),
       )
 
       toast.success(`QR codes generated for ${selectedParticipants.length} participants`)
@@ -154,8 +165,9 @@ const QRGenerator = () => {
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="select-all"
-                  checked={selectedParticipants.length === participants.length}
+                  checked={participants.length > 0 && selectedParticipants.length === participants.length}
                   onCheckedChange={toggleSelectAll}
+                  disabled={participants.length === 0 || fetchingParticipants}
                 />
                 <label htmlFor="select-all" className="text-sm font-medium">
                   Select All
@@ -176,31 +188,48 @@ const QRGenerator = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {participants.map((participant) => (
-                    <TableRow key={participant.id}>
-                      <TableCell>
-                        <Checkbox
-                          checked={selectedParticipants.includes(participant.id)}
-                          onCheckedChange={() => toggleSelect(participant.id)}
-                        />
-                      </TableCell>
-                      <TableCell>{participant.name}</TableCell>
-                      <TableCell>{participant.email}</TableCell>
-                      <TableCell>{participant.phone}</TableCell>
-                      <TableCell>{participant.utrId}</TableCell>
-                      <TableCell>
-                        {participant.qrGenerated ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            QR Generated
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            Ready
-                          </span>
-                        )}
+                  {fetchingParticipants ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-4">
+                        <div className="flex justify-center items-center">
+                          <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+                          Loading participants...
+                        </div>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : participants.length > 0 ? (
+                    participants.map((participant) => (
+                      <TableRow key={participant._id}>
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedParticipants.includes(participant._id)}
+                            onCheckedChange={() => toggleSelect(participant._id)}
+                          />
+                        </TableCell>
+                        <TableCell>{participant.name}</TableCell>
+                        <TableCell>{participant.email}</TableCell>
+                        <TableCell>{participant.phoneNumber}</TableCell>
+                        <TableCell>{participant.utrId || 'N/A'}</TableCell>
+                        <TableCell>
+                          {participant.qrCode ? (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              QR Generated
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              Ready
+                            </span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-4">
+                        No verified participants found
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </div>
@@ -248,7 +277,7 @@ const QRGenerator = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               {generatedQRs.map((qr) => {
-                const participant = participants.find((p) => p.id === qr.id)
+                const participant = participants.find((p) => p._id === qr.id)
                 return (
                   <div key={qr.id} className="bg-white p-4 rounded-lg shadow">
                     <div className="flex flex-col items-center">
@@ -259,7 +288,7 @@ const QRGenerator = () => {
                       />
                       <div className="mt-3 text-center">
                         <h4 className="font-medium">{participant?.name}</h4>
-                        <p className="text-sm text-gray-500">{participant?.phone}</p>
+                        <p className="text-sm text-gray-500">{participant?.phoneNumber}</p>
                       </div>
                       <div className="mt-3 flex space-x-2">
                         <Button variant="outline" size="sm" onClick={() => window.open(qr.qrCode, "_blank")}>

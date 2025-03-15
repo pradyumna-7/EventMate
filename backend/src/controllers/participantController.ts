@@ -45,10 +45,16 @@ export const storeParticipants = async (participants: ParticipantData[]): Promis
 // Get all participants with optional search and sorting
 export const getAllParticipants = async (req: Request, res: Response) => {
   try {
-    const { search, sortBy, sortOrder } = req.query;
+    const { search, sortBy, sortOrder, verified } = req.query;
     
     // Build the query
     let query = Participant.find();
+    
+    // Apply verified filter if provided
+    if (verified !== undefined) {
+      query = query.where('verified').equals(verified === 'true');
+      console.log(`Filtering participants by verification status: ${verified}`);
+    }
     
     // Apply search if provided
     if (search) {
@@ -72,7 +78,7 @@ export const getAllParticipants = async (req: Request, res: Response) => {
     }
     
     const participants = await query.exec();
-    console.log('Participants:', participants);
+    console.log(`Found ${participants.length} participants matching criteria`);
     
     return res.status(200).json({
       success: true,
