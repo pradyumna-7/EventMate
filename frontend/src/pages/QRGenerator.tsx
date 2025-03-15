@@ -6,8 +6,10 @@ import { Card } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { QrCode, Download, Send, RefreshCw } from "lucide-react"
+import { QrCode, Download, Send, RefreshCw, Search, ChevronDown } from "lucide-react"
 import toast from "react-hot-toast"
+import { Input } from "@/components/ui/input"
+import { cn } from "@/lib/utils"
 
 interface Participant {
   _id: string
@@ -19,12 +21,18 @@ interface Participant {
   qrCode: string | null
 }
 
+type SortField = 'name' | 'email' | 'phoneNumber' | 'utrId';
+type SortDirection = 'asc' | 'desc';
+
 const QRGenerator = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [participants, setParticipants] = useState<Participant[]>([])
   const [selectedParticipants, setSelectedParticipants] = useState<string[]>([])
   const [generatedQRs, setGeneratedQRs] = useState<{ id: string; qrCode: string }[]>([])
   const [fetchingParticipants, setFetchingParticipants] = useState(true)
+  const [sortField, setSortField] = useState<SortField>('name')
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
+  const [searchQuery, setSearchQuery] = useState('')
 
   const backendUrl = 'http://localhost:5000';
 
@@ -140,6 +148,42 @@ const QRGenerator = () => {
     toast.success("QR codes downloaded successfully!")
   }
 
+  // Updated sorting function to match Verification Results tab
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      // Toggle direction if the same field is clicked again
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      // Set new sort field and default to ascending
+      setSortField(field)
+      setSortDirection('asc')
+    }
+  }
+
+  const filteredAndSortedParticipants = participants
+    .filter(participant => {
+      if (!searchQuery) return true
+      const query = searchQuery.toLowerCase()
+      return (
+        participant.name.toLowerCase().includes(query) ||
+        participant.email.toLowerCase().includes(query) ||
+        participant.phoneNumber.toLowerCase().includes(query) ||
+        (participant.utrId && participant.utrId.toLowerCase().includes(query))
+      )
+    })
+    .sort((a, b) => {
+      // Handle null or undefined values
+      const aValue = a[sortField] ?? '';
+      const bValue = b[sortField] ?? '';
+      
+      // Case-insensitive string comparison
+      if (sortDirection === 'asc') {
+        return String(aValue).localeCompare(String(bValue), undefined, { sensitivity: 'base' });
+      } else {
+        return String(bValue).localeCompare(String(aValue), undefined, { sensitivity: 'base' });
+      }
+    });
+
   return (
     <div className="space-y-6">
       <div>
@@ -174,16 +218,48 @@ const QRGenerator = () => {
                 </label>
               </div>
             </div>
+            
+            <div className="mb-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Search participants..."
+                  className="pl-10"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </div>
 
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-12"></TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead>UTR ID</TableHead>
+                    {[
+                      { key: 'name', label: 'Name' },
+                      { key: 'email', label: 'Email' },
+                      { key: 'phoneNumber', label: 'Phone' },
+                      { key: 'utrId', label: 'UTR ID' },
+                    ].map((col) => (
+                      <TableHead 
+                        key={col.key}
+                        className="cursor-pointer"
+                        onClick={() => handleSort(col.key as SortField)}
+                      >
+                        <div className="flex items-center">
+                          <span>{col.label}</span>
+                          <ChevronDown 
+                            className={cn(
+                              "ml-1 h-4 w-4 transition-transform duration-200",
+                              sortField === col.key 
+                                ? "opacity-100 " + (sortDirection === "desc" ? "rotate-0" : "rotate-180")
+                                : "opacity-0 group-hover:opacity-50"
+                            )}
+                          />
+                        </div>
+                      </TableHead>
+                    ))}
                     <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -197,8 +273,8 @@ const QRGenerator = () => {
                         </div>
                       </TableCell>
                     </TableRow>
-                  ) : participants.length > 0 ? (
-                    participants.map((participant) => (
+                  ) : filteredAndSortedParticipants.length > 0 ? (
+                    filteredAndSortedParticipants.map((participant) => (
                       <TableRow key={participant._id}>
                         <TableCell>
                           <Checkbox
@@ -226,7 +302,7 @@ const QRGenerator = () => {
                   ) : (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center py-4">
-                        No verified participants found
+                        {searchQuery ? 'No matching participants found' : 'No verified participants found'}
                       </TableCell>
                     </TableRow>
                   )}
