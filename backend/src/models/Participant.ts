@@ -34,7 +34,7 @@ const participantSchema = new Schema<IParticipant>({
   },
   utrId: {
     type: String,
-    required: false,
+    required: true,
     default: null,
   },
   qrCode: {

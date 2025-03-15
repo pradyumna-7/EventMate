@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import toast from "react-hot-toast"
 import { useLocation } from "react-router-dom"
+import axios from "axios"
 
 interface Participant {
   id: number
@@ -22,6 +23,8 @@ interface Participant {
   amount: number
   verified: boolean
 }
+
+const backendUrl = 'http://localhost:5000';
 
 const VerificationPage = () => {
   const location = useLocation()
@@ -49,19 +52,12 @@ const VerificationPage = () => {
   const fetchParticipants = async () => {
     setIsLoading(true)
     try {
-      // Adjust the URL if your backend is running on a different port
-      // You can also set this in an environment variable
-      const backendUrl = 'http://localhost:5000';
+      const response = await axios.get(`${backendUrl}/api/verification/results`)
       
-      const response = await fetch(`${backendUrl}/api/verification/results`)
-      
-      if (!response.ok) {
-        throw new Error(`Server responded with status: ${response.status}`);
-      }
-      
-      const data = await response.json()
+      const data = response.data
       
       if (data.success && data.participants) {
+        console.log(data.participants)
         setParticipants(data.participants)
         setVerificationComplete(true)
       } else {
@@ -102,26 +98,19 @@ const VerificationPage = () => {
     setIsLoading(true)
 
     try {
-      // Use the same backendUrl here
-      const backendUrl = 'http://localhost:5000';
-      
       const formData = new FormData()
       formData.append('phonepeFile', phonepeFile)
       formData.append('participantsFile', participantsFile)
       formData.append('expectedAmount', expectedAmount)
       
-      // Call the backend API to process the files
-      const response = await fetch(`${backendUrl}/api/verification/verify-payments`, {
-        method: 'POST',
-        body: formData
+      // Call the backend API to process the files using axios
+      const response = await axios.post(`${backendUrl}/api/verification/verify-payments`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
       })
       
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || 'Verification failed')
-      }
-      
-      const data = await response.json()
+      const data = response.data
       
       // After receiving the data, log it to help with debugging
       console.log('Verification API response:', data);
@@ -141,9 +130,16 @@ const VerificationPage = () => {
     }
   }
 
-  const handleManualVerify = (id: number) => {
-    setParticipants((prev) => prev.map((p) => (p.id === id ? { ...p, verified: true } : p)))
-    toast.success("Participant manually verified")
+  const handleManualVerify = async (id: number) => {
+    try {
+      await axios.put(`${backendUrl}/api/verification/verify/${id}`);
+      // Update local state on success
+      setParticipants((prev) => prev.map((p) => (p.id === id ? { ...p, verified: true } : p)));
+      toast.success("Participant manually verified");
+    } catch (error) {
+      console.error("Error verifying participant:", error);
+      toast.error(`Failed to verify participant: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 
   // Filter and sort participants for display

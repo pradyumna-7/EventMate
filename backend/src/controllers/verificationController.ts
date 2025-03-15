@@ -303,8 +303,8 @@ export const getVerificationResults = async (req: Request, res: Response) => {
     
     const participants = await query.exec();
     
-    const results: ParticipantData[] = participants.map((p, index) => ({
-      id: index + 1,
+    const results: ParticipantData[] = participants.map((p) => ({
+      id: p._id,
       name: p.name,
       email: p.email,
       phone: p.phoneNumber,
@@ -325,5 +325,33 @@ export const getVerificationResults = async (req: Request, res: Response) => {
       success: false,
       error: 'Server error'
     });
+  }
+};
+
+
+// Update verification status for a participant - simplified version
+export const updateVerificationStatus = async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id;
+    
+    if (!id) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Participant ID is required' 
+      });
+    }
+    console.log(`Setting verification to true for participant: ${id}`);
+    
+    const participant = await Participant.findById(id);
+    if (!participant) {
+      return res.status(404).json({ success: false, message: 'Participant not found' });
+    }
+    participant.verified = true;
+    await participant.save();
+    
+    return res.status(200).json({ success: true, verified: true });
+  } catch (error) {
+    console.error('Error updating verification status:', error);
+    return res.status(500).json({ success: false, message: 'Failed to update verification status' });
   }
 };

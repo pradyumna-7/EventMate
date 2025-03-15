@@ -72,6 +72,7 @@ export const getAllParticipants = async (req: Request, res: Response) => {
     }
     
     const participants = await query.exec();
+    console.log('Participants:', participants);
     
     return res.status(200).json({
       success: true,
