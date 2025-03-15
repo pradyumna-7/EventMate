@@ -33,6 +33,7 @@ const QRGenerator = () => {
   const [sortField, setSortField] = useState<SortField>('name')
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
   const [searchQuery, setSearchQuery] = useState('')
+  const [activeTab, setActiveTab] = useState('participants');
 
   const backendUrl = 'http://localhost:5000';
 
@@ -57,6 +58,20 @@ const QRGenerator = () => {
         
         if (data.success && Array.isArray(data.data)) {
           setParticipants(data.data);
+          
+          // Check for participants that already have QR codes
+          interface QRCode {
+            id: string;
+            qrCode: string;
+          }
+
+          const existingQRs: QRCode[] = data.data
+            .filter((p: Participant) => p.qrCode)
+            .map((p: Participant): QRCode => ({ id: p._id, qrCode: p.qrCode as string }));
+            
+          if (existingQRs.length > 0) {
+            setGeneratedQRs(existingQRs);
+          }
         } else {
           toast.error('Invalid response format from API');
           console.error('Invalid response format:', data);
@@ -71,6 +86,56 @@ const QRGenerator = () => {
 
     fetchVerifiedParticipants();
   }, [])
+
+  useEffect(() => {
+    if (activeTab === 'generated' && generatedQRs.length === 0) {
+      fetchGeneratedQRCodes();
+    }
+  }, [activeTab]);
+
+  const fetchGeneratedQRCodes = async () => {
+    try {
+      const response = await fetch(`${backendUrl}/api/participants/verified`, {
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.success && Array.isArray(data.data)) {
+        // Filter only participants with QR codes
+        const participantsWithQR = data.data.filter((p: Participant) => p.qrCode);
+        
+        // Update participants list and generated QRs
+        setParticipants(prevParticipants => {
+          // Merge with existing participants data
+          const updatedParticipants = [...prevParticipants];
+            participantsWithQR.forEach((newP: Participant) => {
+            const index: number = updatedParticipants.findIndex((p: Participant) => p._id === newP._id);
+            if (index >= 0) {
+              updatedParticipants[index] = newP;
+            } else {
+              updatedParticipants.push(newP);
+            }
+            });
+          return updatedParticipants;
+        });
+        
+        setGeneratedQRs(participantsWithQR.map((p: Participant) => ({
+          id: p._id,
+          qrCode: p.qrCode as string
+        })));
+      }
+    } catch (error) {
+      console.error('Failed to fetch generated QR codes:', error);
+      toast.error('Failed to load generated QR codes');
+    }
+  };
 
   const toggleSelectAll = () => {
     if (selectedParticipants.length === participants.length) {
@@ -97,44 +162,71 @@ const QRGenerator = () => {
     setIsLoading(true)
 
     try {
-      // In a real app, you would call your backend API
-      // const response = await fetch('/api/generate-qr', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ participantIds: selectedParticipants })
-      // })
-      // const data = await response.json()
-
-      // Mock QR generation process
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-
-      // Generate mock QR codes
-      const newQRs = selectedParticipants.map((id) => {
-        // In a real app, this would be the actual QR code data from your backend
-        return {
-          id,
-          qrCode: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-            JSON.stringify({
-              id,
-              name: participants.find((p) => p._id === id)?.name,
-              verified: true,
-              hash: `${id}-${Date.now()}`,
-            }),
-          )}`,
-        }
+      const response = await fetch(`${backendUrl}/api/participants/generate-qr`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ participantIds: selectedParticipants })
       })
+      
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json()
 
-      setGeneratedQRs(newQRs)
+      if (!data.success) {
+        throw new Error(data.message || 'Failed to generate QR codes');
+      }
+
+      // Process the results
+      interface QRGenerationResult {
+        id: string;
+        success: boolean;
+        qrCode: string;
+        message?: string;
+      }
+
+      interface GeneratedQR {
+        id: string;
+        qrCode: string;
+      }
+
+      const newQRs: GeneratedQR[] = data.data
+        .filter((result: QRGenerationResult) => result.success && result.qrCode)
+        .map((result: QRGenerationResult): GeneratedQR => ({
+          id: result.id,
+          qrCode: result.qrCode
+        }));
+
+      setGeneratedQRs(prev => {
+        // Add new QRs and avoid duplicates
+        const existingIds = new Set(prev.map(qr => qr.id));
+        const uniqueNewQRs = newQRs.filter(qr => !existingIds.has(qr.id));
+        return [...prev, ...uniqueNewQRs];
+      });
 
       // Update participants to mark QR as generated
       setParticipants((prev) =>
-        prev.map((p) => (selectedParticipants.includes(p._id) ? { ...p, qrCode: newQRs.find(qr => qr.id === p._id)?.qrCode || null } : p)),
+        prev.map((p) => {
+          const resultItem = data.data.find(r => r.id === p._id);
+          if (resultItem && resultItem.success && resultItem.qrCode) {
+            return { ...p, qrCode: resultItem.qrCode };
+          }
+          return p;
+        }),
       )
 
       toast.success(`QR codes generated for ${selectedParticipants.length} participants`)
+      
+      setSelectedParticipants([]);
+      
+      // Switch to generated tab if we have QR codes
+      if (newQRs.length > 0) {
+        setActiveTab('generated');
+      }
     } catch (error) {
       console.error("QR generation error:", error)
-      toast.error("Error generating QR codes")
+      toast.error(`Error generating QR codes: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setIsLoading(false)
     }
@@ -191,7 +283,7 @@ const QRGenerator = () => {
         <p className="text-gray-500">Generate QR codes for verified participants</p>
       </div>
 
-      <Tabs defaultValue="participants">
+      <Tabs defaultValue="participants" value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="participants">Select Participants</TabsTrigger>
           <TabsTrigger value="generated" disabled={generatedQRs.length === 0}>
@@ -358,7 +450,7 @@ const QRGenerator = () => {
                   <div key={qr.id} className="bg-white p-4 rounded-lg shadow">
                     <div className="flex flex-col items-center">
                       <img
-                        src={qr.qrCode || "/placeholder.svg"}
+                        src={qr.qrCode}
                         alt={`QR code for ${participant?.name}`}
                         className="w-full max-w-[200px] h-auto"
                       />
@@ -367,7 +459,15 @@ const QRGenerator = () => {
                         <p className="text-sm text-gray-500">{participant?.phoneNumber}</p>
                       </div>
                       <div className="mt-3 flex space-x-2">
-                        <Button variant="outline" size="sm" onClick={() => window.open(qr.qrCode, "_blank")}>
+                        <Button variant="outline" size="sm" onClick={() => {
+                          // Create a download link for the QR code
+                          const link = document.createElement('a');
+                          link.href = qr.qrCode;
+                          link.download = `qrcode-${participant?.name || qr.id}.png`;
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                        }}>
                           <Download className="h-4 w-4 mr-1" />
                           Download
                         </Button>
