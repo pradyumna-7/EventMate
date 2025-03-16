@@ -12,7 +12,7 @@ const App: React.FC = () => {
   return (
     <Router>
       <div className="min-h-screen h-full w-full bg-gray-50">
-        <Toaster position="top-right" />
+        <Toaster position="top-center" />
         <Navbar />
         <div className="container mx-auto px-4 py-8 h-full">
           <Routes>

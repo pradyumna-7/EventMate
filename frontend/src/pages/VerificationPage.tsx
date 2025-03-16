@@ -133,15 +133,45 @@ const VerificationPage = () => {
     }
   }
 
-  const handleManualVerify = async (id: number) => {
+  const handleManualVerify = async (id: number, name: string) => {
     try {
       await axios.put(`${backendUrl}/api/verification/verify/${id}`);
       // Update local state on success
       setParticipants((prev) => prev.map((p) => (p.id === id ? { ...p, verified: true } : p)));
-      toast.success("Participant manually verified");
+      
+      // Show toast with participant name and undo button
+      toast.success(
+        (t) => (
+          <div className="flex items-center justify-between">
+            <span>{name} manually verified</span>
+            <button
+              className="ml-4 px-2 py-1 bg-gray-200 text-gray-800 rounded text-xs font-medium hover:bg-gray-300"
+              onClick={() => {
+                handleUndoVerification(id, name);
+                toast.dismiss(t.id);
+              }}
+            >
+              Undo
+            </button>
+          </div>
+        ),
+        { duration: 5000 }
+      );
     } catch (error) {
       console.error("Error verifying participant:", error);
       toast.error(`Failed to verify participant: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+  
+  const handleUndoVerification = async (id: number, name: string) => {
+    try {
+      await axios.put(`${backendUrl}/api/verification/unverify/${id}`);
+      // Update local state on success
+      setParticipants((prev) => prev.map((p) => (p.id === id ? { ...p, verified: false } : p)));
+      toast.success(`Verification of ${name} has been undone`);
+    } catch (error) {
+      console.error("Error undoing verification:", error);
+      toast.error(`Failed to undo verification: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -427,11 +457,11 @@ const VerificationPage = () => {
                 </div>
                 
                 <Button
-                onClick={() => setIsWarningModalOpen(true)}
-                className="bg-gray-900 hover:bg-red-800 text-white shadow-lg transition-transform transform hover:scale-105 cursor-pointer"
+                  onClick={() => setIsWarningModalOpen(true)}
+                  className="bg-gray-900 hover:bg-red-800 text-white shadow-lg transition-transform transform hover:scale-105 cursor-pointer"
                 >
-                <MinusCircle className="mr-2 h-4 w-4" />
-                    Delete All
+                  <MinusCircle className="mr-2 h-4 w-4" />
+                  Delete All
                 </Button>
                 <Button variant="outline" onClick={fetchParticipants} className="cursor-pointer">
                   <RefreshCw className="h-4 w-4 mr-1" />
@@ -465,7 +495,7 @@ const VerificationPage = () => {
                   Cancel
                 </Button>
                 <Button
-                  onClick={() => deleteParticipants()}
+                  onClick={() => deleteParticipants() }
                   className="bg-red-800 hover:bg-slate-950 text-white cursor-pointer"
                 >
                   Delete
@@ -550,9 +580,36 @@ const VerificationPage = () => {
                           </TableCell>
                           <TableCell>
                             {!participant.verified && (
-                              <Button variant="outline" size="sm" onClick={() => handleManualVerify(participant.id)}>
-                                Verify Manually
-                              </Button>
+                              <div className="relative group">
+                                <Button 
+                                  variant="outline"  
+                                  className="cursor-pointer" 
+                                  size="sm" 
+                                  onClick={() => handleManualVerify(participant.id, participant.name)}
+                                >
+                                  Verify Manually
+                                </Button>
+                                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-gray-900 text-white text-sm rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none shadow-lg z-50">
+                                  By clicking this, it will verify the participant
+                                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-t-4 border-l-4 border-r-4 border-gray-900 border-l-transparent border-r-transparent"></div>
+                                </div>
+                              </div>
+                            )}
+                            {participant.verified && (
+                              <div className="relative group">
+                                <Button 
+                                  variant="ghost" 
+                                  className="cursor-pointer text-gray-500 hover:text-red-600" 
+                                  size="sm" 
+                                  onClick={() => handleUndoVerification(participant.id, participant.name)}
+                                >
+                                  Undo Verification
+                                </Button>
+                                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-gray-900 text-white text-sm rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none shadow-lg z-50">
+                                  Click to undo verification
+                                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-t-4 border-l-4 border-r-4 border-gray-900 border-l-transparent border-r-transparent"></div>
+                                </div>
+                              </div>
                             )}
                           </TableCell>
                         </TableRow>

@@ -356,6 +356,33 @@ export const updateVerificationStatus = async (req: Request, res: Response) => {
   }
 };
 
+// Undo verification status for a participant
+export const undoVerification = async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id;
+    
+    if (!id) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Participant ID is required' 
+      });
+    }
+    console.log(`Setting verification to false for participant: ${id}`);
+    
+    const participant = await Participant.findById(id);
+    if (!participant) {
+      return res.status(404).json({ success: false, message: 'Participant not found' });
+    }
+    participant.verified = false;
+    await participant.save();
+    
+    return res.status(200).json({ success: true, verified: false });
+  } catch (error) {
+    console.error('Error undoing verification status:', error);
+    return res.status(500).json({ success: false, message: 'Failed to undo verification status' });
+  }
+};
+
 export const deleteAllParticipants = async (req: Request, res: Response) => {
   try {
     await Participant.deleteMany({});
