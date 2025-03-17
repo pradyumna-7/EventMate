@@ -279,3 +279,83 @@ export const sendQRCodes = async (req: Request, res: Response) => {
     });
   }
 };
+
+// Mark participant attendance
+export const markAttendance = async (req: Request, res: Response) => {
+  try {
+    const { participantId } = req.body;
+    
+    if (!participantId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a participant ID'
+      });
+    }
+    
+    const participant = await Participant.findById(participantId);
+    
+    if (!participant) {
+      return res.status(404).json({
+        success: false,
+        message: 'Participant not found'
+      });
+    }
+    
+    // Update attendance status
+    participant.attended = true;
+    participant.attendedAt = new Date();
+    await participant.save();
+    
+    return res.status(200).json({
+      success: true,
+      message: 'Attendance marked successfully',
+      data: participant
+    });
+  } catch (error) {
+    console.error('Error marking attendance:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error while marking attendance',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};
+
+// Get all attended participants
+export const getAllAttendees = async (req: Request, res: Response) => {
+  try {
+    const { search } = req.query;
+    
+    // Build the query for attended participants
+    let query = Participant.find({ attended: true });
+    
+    // Apply search if provided
+    if (search) {
+      const searchRegex = new RegExp(String(search), 'i');
+      query = query.or([
+        { name: searchRegex },
+        { email: searchRegex },
+        { phoneNumber: searchRegex },
+        { utrId: searchRegex }
+      ]);
+    }
+    
+    // Sort by attendance timestamp in descending order
+    query = query.sort({ attendedAt: -1 });
+    
+    const attendees = await query.exec();
+    
+    return res.status(200).json({
+      success: true,
+      count: attendees.length,
+      data: attendees
+    });
+  } catch (error) {
+    console.error('Error fetching attended participants:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error while fetching attended participants',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};
