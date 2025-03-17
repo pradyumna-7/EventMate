@@ -3,6 +3,25 @@ import Participant, { IParticipant } from '../models/Participant';
 import { ParticipantData } from './verificationController';
 import QRCode from 'qrcode';
 import nodemailer from 'nodemailer';
+import crypto from 'crypto'; // Add import for crypto module
+
+// Function to generate secure hash for QR codes
+const generateQRHash = (participantId: string): string => {
+  const secret = process.env.QR_SECRET || 'default-secret-change-me';
+  return crypto
+    .createHmac('sha256', secret)
+    .update(participantId)
+    .digest('hex');
+};
+
+// Verify QR code hash
+const verifyQRHash = (participantId: string, hash: string): boolean => {
+  const expectedHash = generateQRHash(participantId);
+  return crypto.timingSafeEqual(
+    Buffer.from(expectedHash, 'hex'),
+    Buffer.from(hash, 'hex')
+  );
+};
 
 // Store participants from verification results to MongoDB
 export const storeParticipants = async (participants: ParticipantData[]): Promise<IParticipant[]> => {
@@ -154,9 +173,13 @@ export const generateQRCodes = async (req: Request, res: Response) => {
         continue;
       }
       
-      // Generate QR code with ONLY participant ID for security
+      // Generate hash for the participant ID
+      const hash = generateQRHash(participant._id.toString());
+      
+      // Generate QR code with participant ID and hash for security
       const qrData = JSON.stringify({
-        id: participant._id
+        id: participant._id,
+        hash: hash
       });
       
       // Generate QR code as Base64 string
@@ -283,12 +306,28 @@ export const sendQRCodes = async (req: Request, res: Response) => {
 // Mark participant attendance
 export const markAttendance = async (req: Request, res: Response) => {
   try {
-    const { participantId } = req.body;
+    const { participantId, hash } = req.body;
     
     if (!participantId) {
       return res.status(400).json({
         success: false,
         message: 'Please provide a participant ID'
+      });
+    }
+    
+    if (!hash) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid QR code: Missing security hash'
+      });
+    }
+    
+    // Verify the hash
+    const isValidHash = verifyQRHash(participantId, hash);
+    if (!isValidHash) {
+      return res.status(403).json({
+        success: false,
+        message: 'Invalid QR code: Security verification failed'
       });
     }
     
