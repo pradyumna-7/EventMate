@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import Participant, { IParticipant } from '../models/Participant';
-import { getAllParticipants, generateQRCodes, sendQRCodes } from '../controllers/participantController';
+import { getAllParticipants, generateQRCodes, sendQRCodes, getParticipantById } from '../controllers/participantController';
 
 const router = express.Router();
 
@@ -9,6 +9,10 @@ router.get('/verified', (req: Request, res: Response) => {
   console.log('Getting verified participants only');
   return getAllParticipants(req, res);
 });
+
+// Get participant by ID
+router.get('/:id', getParticipantById);
+
 // Generate QR codes for participants
 router.post('/generate-qr', generateQRCodes);
 

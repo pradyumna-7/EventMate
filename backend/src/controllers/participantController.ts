@@ -31,7 +31,9 @@ export const storeParticipants = async (participants: ParticipantData[]): Promis
           utrId: participant.utrId,
           qrCode: null,
           verified: participant.verified,
-          amount: participant.amount || 0 // Add amount field
+          amount: participant.amount || 0, // Add amount field
+          attended: false, // Initialize new field
+          attendedAt: null // Initialize new field
         });
         storedParticipants.push(newParticipant);
       }
@@ -92,6 +94,29 @@ export const getAllParticipants = async (req: Request, res: Response) => {
     return res.status(500).json({
       success: false,
       error: 'Server error'
+    });
+  }
+};
+
+// Get participant by ID
+export const getParticipantById = async (req: Request, res: Response) => {
+  try {
+    const participant = await Participant.findById(req.params.id);
+    if (!participant) {
+      return res.status(404).json({
+        success: false,
+        message: 'Participant not found'
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      data: participant
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Error fetching participant',
+      error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 };
