@@ -9,9 +9,10 @@ import jsQR from "jsqr"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
-// Simple interface for QR code data
+// Update QRData interface to include hash
 interface QRData {
   id: string;
+  hash: string;
 }
 
 // Full participant data from API
@@ -116,10 +117,10 @@ const QRScanner = () => {
         lastScannedQR.current = code.data; // Prevent duplicate scans
         
         try {
-          // Parse the QR data to get the participant ID
+          // Parse the QR data to get the participant ID and hash
           const qrData = JSON.parse(code.data) as QRData;
           
-          if (!qrData.id) {
+          if (!qrData.id || !qrData.hash) {
             toast.error("Invalid QR code format");
             return;
           }
@@ -174,16 +175,29 @@ const QRScanner = () => {
   const markAttendance = async (participantId: string) => {
     try {
       setLoading(true);
+      
+      // Get the hash from the last scanned QR code
+      if (!lastScannedQR.current) {
+        toast.error("QR code data not available");
+        return;
+      }
+      
+      const qrData = JSON.parse(lastScannedQR.current) as QRData;
+      
       const response = await fetch(`${backendUrl}/api/participants/mark-attendance`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ participantId }),
+        body: JSON.stringify({ 
+          participantId: participantId,
+          hash: qrData.hash
+        }),
       });
       
       if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Error ${response.status}`);
       }
       
       const result = await response.json();
@@ -201,13 +215,12 @@ const QRScanner = () => {
       }
     } catch (error) {
       console.error("Error marking attendance:", error);
-      toast.error("Failed to mark attendance");
+      toast.error(error instanceof Error ? error.message : "Failed to mark attendance");
     } finally {
       setLoading(false);
     }
   };
 
-  // Load attended participants on component mount
   useEffect(() => {
     fetchAttendedParticipants();
   }, []);
