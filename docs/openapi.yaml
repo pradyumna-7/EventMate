@@ -401,6 +401,139 @@ paths:
                 success: false
                 message: "Failed to send QR codes via email"
 
+  /participants/get-all-attendees:
+    get:
+      operationId: getAllAttendees
+      summary: Get all attendees
+      description: Retrieves the list of all attendees
+      tags:
+        - Participants
+      responses:
+        '200':
+          description: Successfully retrieved all attendees
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    description: Whether the API call was successful
+                    example: true
+                  attendees:
+                    type: array
+                    description: List of all attendees
+                    items:
+                      $ref: '#/components/schemas/ParticipantData'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Failed to retrieve attendees"
+
+  /participants/mark-attendance:
+    post:
+      operationId: markAttendance
+      summary: Mark attendance for a participant
+      description: Marks the attendance of a participant by their ID
+      tags:
+        - Participants
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id
+              properties:
+                id:
+                  type: string
+                  description: Participant ID
+                  example: "1"
+      responses:
+        '200':
+          description: Attendance successfully marked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Attendance marked successfully"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Participant not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Participant not found"
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /participants/{id}:
+    get:
+      operationId: getParticipantById
+      summary: Get participant by ID
+      description: Retrieves a participant's details by their ID
+      tags:
+        - Participants
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Participant ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully retrieved participant details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  participant:
+                    $ref: '#/components/schemas/ParticipantData'
+        '404':
+          description: Participant not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Participant not found"
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
 components:
   schemas:
     VerificationResponse:
