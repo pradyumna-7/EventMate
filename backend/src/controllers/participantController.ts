@@ -154,16 +154,9 @@ export const generateQRCodes = async (req: Request, res: Response) => {
         continue;
       }
       
-      // Generate QR code with participant data
+      // Generate QR code with ONLY participant ID for security
       const qrData = JSON.stringify({
-        id: participant._id,
-        name: participant.name,
-        email: participant.email,
-        verified: participant.verified,
-        phoneNumber: participant.phoneNumber,
-        attended: participant.attended,
-        amount: participant.amount,
-        timestamp: Date.now()
+        id: participant._id
       });
       
       // Generate QR code as Base64 string

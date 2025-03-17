@@ -3,28 +3,37 @@
 import { useState, useRef, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { CheckCircle, XCircle, Camera, QrCode } from "lucide-react"
+import { CheckCircle, XCircle, Camera, QrCode, RefreshCw } from "lucide-react"
 import toast from "react-hot-toast"
 import jsQR from "jsqr"
 
-interface ScanResult {
-  id: string
-  name: string
-  email: string
-  phoneNumber: string  // Added phone number
-  verified: boolean
-  timestamp: number
-  amount?: number      // Added amount field
-  attended?: boolean   // Added attended field
+// Simple interface for QR code data
+interface QRData {
+  id: string;
+}
+
+// Full participant data from API
+interface ParticipantData {
+  _id: string;
+  name: string;
+  email: string;
+  phoneNumber: string;
+  verified: boolean;
+  amount?: number;
+  attended?: boolean;
+  utrId?: string;
 }
 
 const QRScanner = () => {
   const [scanning, setScanning] = useState(false)
-  const [scanResult, setScanResult] = useState<ScanResult | null>(null)
+  const [scanResult, setScanResult] = useState<ParticipantData | null>(null)
   const [cameraError, setCameraError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const lastScannedQR = useRef<string | null>(null) // Track last scanned QR to avoid duplicates
+  
+  const backendUrl = 'http://localhost:5000';
 
   const startScanning = async () => {
     setScanning(true)
@@ -52,6 +61,31 @@ const QRScanner = () => {
     }
   }, [])
 
+  // Fetch participant data from backend using the participant ID
+  const fetchParticipantData = async (participantId: string) => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${backendUrl}/api/participants/${participantId}`);
+      
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+      
+      const result = await response.json();
+      
+      if (!result.success || !result.data) {
+        throw new Error('Invalid response from server');
+      }
+      
+      return result.data as ParticipantData;
+    } catch (error) {
+      console.error('Error fetching participant data:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const scanQRCode = useCallback(() => {
     if (!scanning || !videoRef.current || !canvasRef.current) return
 
@@ -73,14 +107,31 @@ const QRScanner = () => {
       const code = jsQR(imageData.data, imageData.width, imageData.height)
 
       if (code && code.data !== lastScannedQR.current) {
+        lastScannedQR.current = code.data; // Prevent duplicate scans
+        
         try {
-          const result: ScanResult = JSON.parse(code.data)
-          setScanResult(result)
-          lastScannedQR.current = code.data // Prevent duplicate scans
-          toast.success("QR code scanned successfully!")
+          // Parse the QR data to get the participant ID
+          const qrData = JSON.parse(code.data) as QRData;
+          
+          if (!qrData.id) {
+            toast.error("Invalid QR code format");
+            return;
+          }
+          
+          // Fetch the participant data using the ID
+          fetchParticipantData(qrData.id)
+            .then(participantData => {
+              setScanResult(participantData);
+              toast.success("QR code scanned successfully!");
+            })
+            .catch(error => {
+              toast.error("Invalid QR code or participant not found");
+              console.error("Error fetching participant data:", error);
+            });
+            
         } catch (error) {
-          console.error("QR code parsing error:", error)
-          toast.error("Failed to parse QR code")
+          console.error("QR code parsing error:", error);
+          toast.error("Invalid QR code");
         }
       }
     }
@@ -142,7 +193,12 @@ const QRScanner = () => {
         <Card className="p-6">
           <h3 className="text-lg font-medium mb-4">Scan Result</h3>
 
-          {scanResult ? (
+          {loading ? (
+            <div className="h-64 flex flex-col items-center justify-center">
+              <RefreshCw className="h-8 w-8 text-primary animate-spin mb-4" />
+              <p>Loading participant data...</p>
+            </div>
+          ) : scanResult ? (
             <div className="space-y-4">
               <div className="flex items-center justify-center">
                 {scanResult.verified ? (
@@ -184,6 +240,12 @@ const QRScanner = () => {
                     {scanResult.attended ? "Present" : "Not Marked"}
                   </span>
                 </div>
+                {scanResult.utrId && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">UTR ID:</span>
+                    <span className="font-medium">{scanResult.utrId}</span>
+                  </div>
+                )}
               </div>
 
               <Button variant="outline" onClick={() => setScanResult(null)} className="w-full">
