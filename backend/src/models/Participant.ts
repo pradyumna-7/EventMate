@@ -6,6 +6,8 @@ export interface IParticipant extends Document {
   email: string;
   utrId: string | null;
   qrCode: string | null;
+  attended: boolean;
+  attendedAt: Date | null;
   verified: boolean;
   amount: number;
   createdAt: Date;
@@ -40,6 +42,14 @@ const participantSchema = new Schema<IParticipant>({
   qrCode: {
     type: String,
     required: false,
+    default: null,
+  },
+  attended: {
+    type: Boolean,
+    default: false,
+  },
+  attendedAt: {
+    type: Date,
     default: null,
   },
   verified: {
