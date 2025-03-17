@@ -160,6 +160,9 @@ export const generateQRCodes = async (req: Request, res: Response) => {
         name: participant.name,
         email: participant.email,
         verified: participant.verified,
+        phoneNumber: participant.phoneNumber,
+        attended: participant.attended,
+        amount: participant.amount,
         timestamp: Date.now()
       });
       

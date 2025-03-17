@@ -3,63 +3,39 @@
 import { useState, useRef, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { CheckCircle, XCircle, Camera, UserCheck, QrCode } from "lucide-react"
+import { CheckCircle, XCircle, Camera, QrCode } from "lucide-react"
 import toast from "react-hot-toast"
+import jsQR from "jsqr"
 
 interface ScanResult {
-  id: number
+  id: string
   name: string
   email: string
-  phone: string
+  phoneNumber: string  // Added phone number
   verified: boolean
-  hash: string
-  timestamp: string
+  timestamp: number
+  amount?: number      // Added amount field
+  attended?: boolean   // Added attended field
 }
 
 const QRScanner = () => {
   const [scanning, setScanning] = useState(false)
   const [scanResult, setScanResult] = useState<ScanResult | null>(null)
-  const [attendanceMarked, setAttendanceMarked] = useState(false)
   const [cameraError, setCameraError] = useState<string | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-
-  // Mock function to simulate QR code scanning
-  const mockScanQRCode = () => {
-    // In a real app, this would be actual QR code scanning logic
-    setTimeout(() => {
-      const mockResult: ScanResult = {
-        id: 1,
-        name: "Rahul Sharma",
-        email: "rahul@example.com",
-        phone: "9876543210",
-        verified: true,
-        hash: "1-1678954321",
-        timestamp: new Date().toISOString(),
-      }
-
-      setScanResult(mockResult)
-      setScanning(false)
-      toast.success("QR code scanned successfully!")
-    }, 3000)
-  }
+  const lastScannedQR = useRef<string | null>(null) // Track last scanned QR to avoid duplicates
 
   const startScanning = async () => {
     setScanning(true)
-    setScanResult(null)
-    setAttendanceMarked(false)
     setCameraError(null)
 
     try {
-      // In a real app, you would initialize the camera and QR scanner here
-      // const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-      // if (videoRef.current) {
-      //   videoRef.current.srcObject = stream
-      //   videoRef.current.play()
-      // }
-
-      // For demo purposes, we'll use a mock function
-      mockScanQRCode()
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+        videoRef.current.play()
+      }
     } catch (error) {
       console.error("Camera error:", error)
       setCameraError("Unable to access camera. Please check permissions.")
@@ -69,50 +45,61 @@ const QRScanner = () => {
 
   const stopScanning = useCallback(() => {
     setScanning(false)
-
-    // In a real app, you would stop the camera stream here
-    // if (videoRef.current && videoRef.current.srcObject) {
-    //   const tracks = (videoRef.current.srcObject as MediaStream).getTracks()
-    //   tracks.forEach(track => track.stop())
-    //   videoRef.current.srcObject = null
-    // }
+    if (videoRef.current && videoRef.current.srcObject) {
+      const tracks = (videoRef.current.srcObject as MediaStream).getTracks()
+      tracks.forEach(track => track.stop())
+      videoRef.current.srcObject = null
+    }
   }, [])
 
-  const markAttendance = async () => {
-    if (!scanResult) return
+  const scanQRCode = useCallback(() => {
+    if (!scanning || !videoRef.current || !canvasRef.current) return
 
-    try {
-      // In a real app, you would call your backend API
-      // const response = await fetch('/api/mark-attendance', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ participantId: scanResult.id })
-      // })
+    const video = videoRef.current
+    const canvas = canvasRef.current
 
-      // Mock attendance marking
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      setAttendanceMarked(true)
-      toast.success("Attendance marked successfully!")
-    } catch (error) {
-      console.error("Attendance marking error:", error)
-      toast.error("Error marking attendance")
+    if (video.readyState !== video.HAVE_ENOUGH_DATA) {
+      requestAnimationFrame(scanQRCode)
+      return
     }
-  }
 
-  // Clean up on unmount
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+
+    const context = canvas.getContext("2d")
+    if (context) {
+      context.drawImage(video, 0, 0, canvas.width, canvas.height)
+      const imageData = context.getImageData(0, 0, canvas.width, canvas.height)
+      const code = jsQR(imageData.data, imageData.width, imageData.height)
+
+      if (code && code.data !== lastScannedQR.current) {
+        try {
+          const result: ScanResult = JSON.parse(code.data)
+          setScanResult(result)
+          lastScannedQR.current = code.data // Prevent duplicate scans
+          toast.success("QR code scanned successfully!")
+        } catch (error) {
+          console.error("QR code parsing error:", error)
+          toast.error("Failed to parse QR code")
+        }
+      }
+    }
+
+    requestAnimationFrame(scanQRCode) // Keep scanning while live
+  }, [scanning])
+
   useEffect(() => {
-    return () => {
-      stopScanning()
+    if (scanning) {
+      requestAnimationFrame(scanQRCode)
     }
-  }, [stopScanning])
+  }, [scanning, scanQRCode])
+
+  useEffect(() => stopScanning, [stopScanning])
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">QR Scanner</h1>
-        <p className="text-gray-500">Scan QR codes to verify participants and mark attendance</p>
-      </div>
+      <h1 className="text-2xl font-bold">QR Scanner</h1>
+      <p className="text-gray-500">Scan QR codes to verify participants and mark attendance</p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="p-6">
@@ -171,7 +158,6 @@ const QRScanner = () => {
 
               <div className="text-center">
                 <h4 className="text-xl font-bold">{scanResult.name}</h4>
-                <p className="text-gray-500">{scanResult.phone}</p>
                 <p className="text-gray-500">{scanResult.email}</p>
               </div>
 
@@ -183,26 +169,24 @@ const QRScanner = () => {
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Attendance Status:</span>
-                  <span className={attendanceMarked ? "text-green-600 font-medium" : "text-gray-600 font-medium"}>
-                    {attendanceMarked ? "Present" : "Not Marked"}
+                  <span className="text-gray-500">Phone:</span>
+                  <span className="font-medium">{scanResult.phoneNumber}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Amount:</span>
+                  <span className="font-medium">
+                    {scanResult.amount !== undefined ? `₹${scanResult.amount}` : 'N/A'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Attendance:</span>
+                  <span className={scanResult.attended ? "text-green-600 font-medium" : "text-red-600 font-medium"}>
+                    {scanResult.attended ? "Present" : "Not Marked"}
                   </span>
                 </div>
               </div>
 
-              <Button onClick={markAttendance} disabled={!scanResult.verified || attendanceMarked} className="w-full">
-                <UserCheck className="mr-2 h-4 w-4" />
-                {attendanceMarked ? "Attendance Marked" : "Mark Attendance"}
-              </Button>
-
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setScanResult(null)
-                  setAttendanceMarked(false)
-                }}
-                className="w-full"
-              >
+              <Button variant="outline" onClick={() => setScanResult(null)} className="w-full">
                 Scan Another
               </Button>
             </div>
@@ -222,4 +206,3 @@ const QRScanner = () => {
 }
 
 export default QRScanner
-
