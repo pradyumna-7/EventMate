@@ -19,6 +19,8 @@ interface Participant {
   utrId?: string
   verified: boolean
   qrCode: string | null
+  amount?: number  // Adding amount field
+  attended?: boolean // Adding attended field
 }
 
 type SortField = 'name' | 'email' | 'phoneNumber' | 'utrId';

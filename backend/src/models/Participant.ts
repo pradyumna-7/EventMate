@@ -11,6 +11,8 @@ export interface IParticipant extends Document {
   verified: boolean;
   amount: number;
   createdAt: Date;
+  attended: boolean; // New field
+  attendedAt: Date | null; // New field
 }
 
 const participantSchema = new Schema<IParticipant>({
@@ -64,6 +66,14 @@ const participantSchema = new Schema<IParticipant>({
   createdAt: {
     type: Date,
     default: Date.now,
+  },
+  attended: {
+    type: Boolean,
+    default: false, 
+  },
+  attendedAt: {
+    type: Date,
+    default: null, 
   },
 });
 

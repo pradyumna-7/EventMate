@@ -3,63 +3,54 @@
 import { useState, useRef, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { CheckCircle, XCircle, Camera, UserCheck, QrCode } from "lucide-react"
+import { CheckCircle, XCircle, Camera, QrCode, RefreshCw, Search, UserCheck } from "lucide-react"
 import toast from "react-hot-toast"
+import jsQR from "jsqr"
+import { Input } from "@/components/ui/input"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
-interface ScanResult {
-  id: number
-  name: string
-  email: string
-  phone: string
-  verified: boolean
-  hash: string
-  timestamp: string
+// Simple interface for QR code data
+interface QRData {
+  id: string;
+}
+
+// Full participant data from API
+interface ParticipantData {
+  _id: string;
+  name: string;
+  email: string;
+  phoneNumber: string;
+  verified: boolean;
+  amount?: number;
+  attended?: boolean;
+  utrId?: string;
+  attendedAt?: string;
 }
 
 const QRScanner = () => {
   const [scanning, setScanning] = useState(false)
-  const [scanResult, setScanResult] = useState<ScanResult | null>(null)
-  const [attendanceMarked, setAttendanceMarked] = useState(false)
+  const [scanResult, setScanResult] = useState<ParticipantData | null>(null)
   const [cameraError, setCameraError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-
-  // Mock function to simulate QR code scanning
-  const mockScanQRCode = () => {
-    // In a real app, this would be actual QR code scanning logic
-    setTimeout(() => {
-      const mockResult: ScanResult = {
-        id: 1,
-        name: "Rahul Sharma",
-        email: "rahul@example.com",
-        phone: "9876543210",
-        verified: true,
-        hash: "1-1678954321",
-        timestamp: new Date().toISOString(),
-      }
-
-      setScanResult(mockResult)
-      setScanning(false)
-      toast.success("QR code scanned successfully!")
-    }, 3000)
-  }
+  const lastScannedQR = useRef<string | null>(null) // Track last scanned QR to avoid duplicates
+  const [attendedParticipants, setAttendedParticipants] = useState<ParticipantData[]>([]);
+  const [attendeeSearchQuery, setAttendeeSearchQuery] = useState('');
+  const [fetchingAttendees, setFetchingAttendees] = useState(false);
+  
+  const backendUrl = 'http://localhost:5000';
 
   const startScanning = async () => {
     setScanning(true)
-    setScanResult(null)
-    setAttendanceMarked(false)
     setCameraError(null)
 
     try {
-      // In a real app, you would initialize the camera and QR scanner here
-      // const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-      // if (videoRef.current) {
-      //   videoRef.current.srcObject = stream
-      //   videoRef.current.play()
-      // }
-
-      // For demo purposes, we'll use a mock function
-      mockScanQRCode()
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+        videoRef.current.play()
+      }
     } catch (error) {
       console.error("Camera error:", error)
       setCameraError("Unable to access camera. Please check permissions.")
@@ -69,50 +60,182 @@ const QRScanner = () => {
 
   const stopScanning = useCallback(() => {
     setScanning(false)
-
-    // In a real app, you would stop the camera stream here
-    // if (videoRef.current && videoRef.current.srcObject) {
-    //   const tracks = (videoRef.current.srcObject as MediaStream).getTracks()
-    //   tracks.forEach(track => track.stop())
-    //   videoRef.current.srcObject = null
-    // }
+    if (videoRef.current && videoRef.current.srcObject) {
+      const tracks = (videoRef.current.srcObject as MediaStream).getTracks()
+      tracks.forEach(track => track.stop())
+      videoRef.current.srcObject = null
+    }
   }, [])
 
-  const markAttendance = async () => {
-    if (!scanResult) return
-
+  // Fetch participant data from backend using the participant ID
+  const fetchParticipantData = async (participantId: string) => {
     try {
-      // In a real app, you would call your backend API
-      // const response = await fetch('/api/mark-attendance', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ participantId: scanResult.id })
-      // })
-
-      // Mock attendance marking
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      setAttendanceMarked(true)
-      toast.success("Attendance marked successfully!")
+      setLoading(true);
+      const response = await fetch(`${backendUrl}/api/participants/${participantId}`);
+      
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+      
+      const result = await response.json();
+      
+      if (!result.success || !result.data) {
+        throw new Error('Invalid response from server');
+      }
+      
+      return result.data as ParticipantData;
     } catch (error) {
-      console.error("Attendance marking error:", error)
-      toast.error("Error marking attendance")
+      console.error('Error fetching participant data:', error);
+      throw error;
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
-  // Clean up on unmount
-  useEffect(() => {
-    return () => {
-      stopScanning()
+  const scanQRCode = useCallback(() => {
+    if (!scanning || !videoRef.current || !canvasRef.current) return
+
+    const video = videoRef.current
+    const canvas = canvasRef.current
+
+    if (video.readyState !== video.HAVE_ENOUGH_DATA) {
+      requestAnimationFrame(scanQRCode)
+      return
     }
-  }, [stopScanning])
+
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+
+    const context = canvas.getContext("2d")
+    if (context) {
+      context.drawImage(video, 0, 0, canvas.width, canvas.height)
+      const imageData = context.getImageData(0, 0, canvas.width, canvas.height)
+      const code = jsQR(imageData.data, imageData.width, imageData.height)
+
+      if (code && code.data !== lastScannedQR.current) {
+        lastScannedQR.current = code.data; // Prevent duplicate scans
+        
+        try {
+          // Parse the QR data to get the participant ID
+          const qrData = JSON.parse(code.data) as QRData;
+          
+          if (!qrData.id) {
+            toast.error("Invalid QR code format");
+            return;
+          }
+          
+          // Fetch the participant data using the ID
+          fetchParticipantData(qrData.id)
+            .then(participantData => {
+              setScanResult(participantData);
+              toast.success("QR code scanned successfully!");
+            })
+            .catch(error => {
+              toast.error("Invalid QR code or participant not found");
+              console.error("Error fetching participant data:", error);
+            });
+            
+        } catch (error) {
+          console.error("QR code parsing error:", error);
+          toast.error("Invalid QR code");
+        }
+      }
+    }
+
+    requestAnimationFrame(scanQRCode) // Keep scanning while live
+  }, [scanning])
+
+  // Fetch all attended participants
+  const fetchAttendedParticipants = async () => {
+    try {
+      setFetchingAttendees(true);
+      const response = await fetch(`${backendUrl}/api/participants/get-all-attendees`);
+      
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+      
+      const result = await response.json();
+      
+      if (result.success && Array.isArray(result.data)) {
+        setAttendedParticipants(result.data);
+      } else {
+        console.error("Invalid response format for attended participants:", result);
+      }
+    } catch (error) {
+      console.error("Error fetching attended participants:", error);
+      toast.error("Failed to load attended participants");
+    } finally {
+      setFetchingAttendees(false);
+    }
+  };
+
+  // Mark participant attendance
+  const markAttendance = async (participantId: string) => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${backendUrl}/api/participants/mark-attendance`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ participantId }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        toast.success("Attendance marked successfully!");
+        // Update the participant status in the UI
+        if (scanResult) {
+          setScanResult({ ...scanResult, attended: true });
+        }
+        // Refresh the list of attended participants
+        fetchAttendedParticipants();
+      } else {
+        toast.error(result.message || "Failed to mark attendance");
+      }
+    } catch (error) {
+      console.error("Error marking attendance:", error);
+      toast.error("Failed to mark attendance");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load attended participants on component mount
+  useEffect(() => {
+    fetchAttendedParticipants();
+  }, []);
+
+  // Filter attended participants based on search
+  const filteredAttendees = attendedParticipants.filter(attendee => {
+    if (!attendeeSearchQuery) return true;
+    const query = attendeeSearchQuery.toLowerCase();
+    return (
+      attendee.name.toLowerCase().includes(query) ||
+      attendee.email.toLowerCase().includes(query) ||
+      attendee.phoneNumber.toLowerCase().includes(query) ||
+      (attendee.utrId && attendee.utrId.toLowerCase().includes(query))
+    );
+  });
+
+  useEffect(() => {
+    if (scanning) {
+      requestAnimationFrame(scanQRCode)
+    }
+  }, [scanning, scanQRCode])
+
+  useEffect(() => stopScanning, [stopScanning])
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">QR Scanner</h1>
-        <p className="text-gray-500">Scan QR codes to verify participants and mark attendance</p>
-      </div>
+      {/* <h1 className="text-2xl font-bold">QR Scanner</h1> */}
+      <p className="text-gray-500">Scan QR codes to verify participants and mark attendance</p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="p-6">
@@ -155,7 +278,12 @@ const QRScanner = () => {
         <Card className="p-6">
           <h3 className="text-lg font-medium mb-4">Scan Result</h3>
 
-          {scanResult ? (
+          {loading ? (
+            <div className="h-64 flex flex-col items-center justify-center">
+              <RefreshCw className="h-8 w-8 text-primary animate-spin mb-4" />
+              <p>Loading participant data...</p>
+            </div>
+          ) : scanResult ? (
             <div className="space-y-4">
               <div className="flex items-center justify-center">
                 {scanResult.verified ? (
@@ -171,7 +299,6 @@ const QRScanner = () => {
 
               <div className="text-center">
                 <h4 className="text-xl font-bold">{scanResult.name}</h4>
-                <p className="text-gray-500">{scanResult.phone}</p>
                 <p className="text-gray-500">{scanResult.email}</p>
               </div>
 
@@ -183,28 +310,57 @@ const QRScanner = () => {
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Attendance Status:</span>
-                  <span className={attendanceMarked ? "text-green-600 font-medium" : "text-gray-600 font-medium"}>
-                    {attendanceMarked ? "Present" : "Not Marked"}
+                  <span className="text-gray-500">Phone:</span>
+                  <span className="font-medium">{scanResult.phoneNumber}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Amount:</span>
+                  <span className="font-medium">
+                    {scanResult.amount !== undefined ? `₹${scanResult.amount}` : 'N/A'}
                   </span>
                 </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Attendance:</span>
+                  <span className={scanResult.attended ? "text-green-600 font-medium" : "text-red-600 font-medium"}>
+                    {scanResult.attended ? "Present" : "Not Marked"}
+                  </span>
+                </div>
+                {scanResult.utrId && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">UTR ID:</span>
+                    <span className="font-medium">{scanResult.utrId}</span>
+                  </div>
+                )}
               </div>
 
-              <Button onClick={markAttendance} disabled={!scanResult.verified || attendanceMarked} className="w-full">
-                <UserCheck className="mr-2 h-4 w-4" />
-                {attendanceMarked ? "Attendance Marked" : "Mark Attendance"}
-              </Button>
-
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setScanResult(null)
-                  setAttendanceMarked(false)
-                }}
-                className="w-full"
-              >
-                Scan Another
-              </Button>
+              <div className="flex flex-col space-y-2">
+                <Button variant="outline" onClick={() => setScanResult(null)}>
+                  Scan Another
+                </Button>
+                
+                <Button 
+                  onClick={() => markAttendance(scanResult._id)}
+                  disabled={scanResult.attended || loading}
+                  className="flex items-center justify-center"
+                >
+                  {loading ? (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : scanResult.attended ? (
+                    <>
+                      <CheckCircle className="mr-2 h-4 w-4" />
+                      Already Marked
+                    </>
+                  ) : (
+                    <>
+                      <UserCheck className="mr-2 h-4 w-4" />
+                      Mark Attendance
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="h-64 flex flex-col items-center justify-center text-center">
@@ -217,9 +373,87 @@ const QRScanner = () => {
           )}
         </Card>
       </div>
+
+      {/* Attended Participants List */}
+      <Card className="p-6">
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <h3 className="text-lg font-medium">Attended Participants</h3>
+            <p className="text-sm text-gray-500">{attendedParticipants.length} participants checked in</p>
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={fetchAttendedParticipants}
+            disabled={fetchingAttendees}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${fetchingAttendees ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
+
+        <div className="mb-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search attendees..."
+              className="pl-10"
+              value={attendeeSearchQuery}
+              onChange={(e) => setAttendeeSearchQuery(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead>Time</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {fetchingAttendees ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center py-4">
+                    <div className="flex justify-center items-center">
+                      <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+                      Loading attendees...
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : filteredAttendees.length > 0 ? (
+                filteredAttendees.map((attendee) => (
+                  <TableRow key={attendee._id}>
+                    <TableCell className="font-medium">{attendee.name}</TableCell>
+                    <TableCell>{attendee.email}</TableCell>
+                    <TableCell>{attendee.phoneNumber}</TableCell>
+                    <TableCell>
+                      {attendee.attendedAt 
+                        ? new Date(attendee.attendedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                        : 'N/A'
+                      }
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center py-4">
+                    {attendeeSearchQuery 
+                      ? 'No matching attendees found' 
+                      : 'No participants have checked in yet'
+                    }
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </Card>
     </div>
   )
 }
 
 export default QRScanner
-

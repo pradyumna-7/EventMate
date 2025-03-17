@@ -31,7 +31,9 @@ export const storeParticipants = async (participants: ParticipantData[]): Promis
           utrId: participant.utrId,
           qrCode: null,
           verified: participant.verified,
-          amount: participant.amount || 0 // Add amount field
+          amount: participant.amount || 0, // Add amount field
+          attended: false, // Initialize new field
+          attendedAt: null // Initialize new field
         });
         storedParticipants.push(newParticipant);
       }
@@ -96,6 +98,29 @@ export const getAllParticipants = async (req: Request, res: Response) => {
   }
 };
 
+// Get participant by ID
+export const getParticipantById = async (req: Request, res: Response) => {
+  try {
+    const participant = await Participant.findById(req.params.id);
+    if (!participant) {
+      return res.status(404).json({
+        success: false,
+        message: 'Participant not found'
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      data: participant
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Error fetching participant',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};
+
 // Generate QR codes for participants
 export const generateQRCodes = async (req: Request, res: Response) => {
   try {
@@ -129,13 +154,9 @@ export const generateQRCodes = async (req: Request, res: Response) => {
         continue;
       }
       
-      // Generate QR code with participant data
+      // Generate QR code with ONLY participant ID for security
       const qrData = JSON.stringify({
-        id: participant._id,
-        name: participant.name,
-        email: participant.email,
-        verified: participant.verified,
-        timestamp: Date.now()
+        id: participant._id
       });
       
       // Generate QR code as Base64 string
@@ -254,6 +275,86 @@ export const sendQRCodes = async (req: Request, res: Response) => {
     return res.status(500).json({
       success: false,
       message: 'Server error while sending QR codes',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};
+
+// Mark participant attendance
+export const markAttendance = async (req: Request, res: Response) => {
+  try {
+    const { participantId } = req.body;
+    
+    if (!participantId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a participant ID'
+      });
+    }
+    
+    const participant = await Participant.findById(participantId);
+    
+    if (!participant) {
+      return res.status(404).json({
+        success: false,
+        message: 'Participant not found'
+      });
+    }
+    
+    // Update attendance status
+    participant.attended = true;
+    participant.attendedAt = new Date();
+    await participant.save();
+    
+    return res.status(200).json({
+      success: true,
+      message: 'Attendance marked successfully',
+      data: participant
+    });
+  } catch (error) {
+    console.error('Error marking attendance:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error while marking attendance',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};
+
+// Get all attended participants
+export const getAllAttendees = async (req: Request, res: Response) => {
+  try {
+    const { search } = req.query;
+    
+    // Build the query for attended participants
+    let query = Participant.find({ attended: true });
+    
+    // Apply search if provided
+    if (search) {
+      const searchRegex = new RegExp(String(search), 'i');
+      query = query.or([
+        { name: searchRegex },
+        { email: searchRegex },
+        { phoneNumber: searchRegex },
+        { utrId: searchRegex }
+      ]);
+    }
+    
+    // Sort by attendance timestamp in descending order
+    query = query.sort({ attendedAt: -1 });
+    
+    const attendees = await query.exec();
+    
+    return res.status(200).json({
+      success: true,
+      count: attendees.length,
+      data: attendees
+    });
+  } catch (error) {
+    console.error('Error fetching attended participants:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error while fetching attended participants',
       error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
