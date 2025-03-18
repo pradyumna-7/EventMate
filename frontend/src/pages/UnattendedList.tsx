@@ -96,7 +96,7 @@ const UnattendedList = () => {
                   <td className="p-2">{participant.email}</td>
                   <td className="p-2">{participant.phoneNumber}</td>
                   <td className="p-2">
-                    <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">
+                    <span className="px-2 py-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-700/60 dark:text-yellow-300 rounded-full text-sm">
                       Not Attended
                     </span>
                   </td>

@@ -257,7 +257,7 @@ const VerificationPage = () => {
               <div className="space-y-4">
                 <Label htmlFor="expected-amount">Expected Payment Amount (₹)</Label>
                 <div className="flex max-w-md">
-                  <span className="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-l-md">
+                  <span className="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-l-md dark:bg-slate-400 dark:border-gray-600">
                     <IndianRupee className="h-6 w-6 "/>
                   </span>
                   <Input
@@ -266,7 +266,7 @@ const VerificationPage = () => {
                     placeholder="Enter the expected payment amount"
                     value={expectedAmount}
                     onChange={(e) => setExpectedAmount(e.target.value)}
-                    className="rounded-l-none"
+                    className="rounded-l-none dark:border-gray-600"
                   />
                 </div>
                 <p className="text-sm text-gray-500">
@@ -277,18 +277,18 @@ const VerificationPage = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
                 <div className="space-y-4">
                   <Label>PhonePe Statement (PDF)</Label>
-                  <div className="relative flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-6 bg-gray-50 hover:bg-gray-100 transition-all">
+                  <div className="relative flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-6 bg-gray-50 hover:bg-gray-100 transition-all dark:bg-gray-700 dark:border-gray-600">
                     {!phonepeFile ? (
                       <div className="text-center">
                         <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                        <p className="mt-2 text-sm text-gray-600">Click or drag file to upload PhonePe statement</p>
-                        <p className="text-xs text-gray-500">PDF format only</p>
+                        <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">Click or drag file to upload PhonePe statement</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">PDF format only</p>
                       </div>
                     ) : (
                       <div className="text-center">
                         <FileText className="mx-auto h-12 w-12 text-green-600" />
-                        <p className="mt-2 text-sm font-medium text-gray-900">{phonepeFile.name}</p>
-                        <p className="text-xs text-gray-500">{Math.round(phonepeFile.size / 1024)} KB</p>
+                        <p className="mt-2 text-sm font-medium text-gray-900 dark:text-white">{phonepeFile.name}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{Math.round(phonepeFile.size / 1024)} KB</p>
                       </div>
                     )}
                     
@@ -303,7 +303,7 @@ const VerificationPage = () => {
                     <Button 
                       type="button"
                       variant="outline" 
-                      className="mt-4"
+                      className="mt-4 dark:bg-gray-100 dark:text-gray-900" 
                       onClick={() => document.getElementById('phonepe-file')?.click()}
                     >
                       {phonepeFile ? 'Change File' : 'Select File'}
@@ -321,9 +321,9 @@ const VerificationPage = () => {
                     )}
                   </div>
 
-                  <div className="text-sm text-gray-500 bg-blue-50 p-3 rounded-md">
-                    <p className="font-medium text-blue-700">Instructions:</p>
-                    <ul className="list-disc list-inside mt-1 space-y-1">
+                  <div className="text-sm text-gray-500 bg-blue-50 p-3 rounded-md dark:bg-blue-900/20">
+                    <p className="font-medium text-blue-700 dark:text-blue-500">Instructions:</p>
+                    <ul className="list-disc list-inside mt-1 space-y-1 dark:text-slate-400">
                       <li>Upload your PhonePe transaction statement in PDF format</li>
                       <li>The system will extract UTR numbers, amounts, and timestamps</li>
                       <li>Only credit transactions will be considered for verification</li>
@@ -333,18 +333,18 @@ const VerificationPage = () => {
 
                 <div className="space-y-4">
                   <Label>Participants List (CSV)</Label>
-                  <div className="relative flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-6 bg-gray-50 hover:bg-gray-100 transition-all">
+                  <div className="relative flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-6 bg-gray-50 hover:bg-gray-100 transition-all dark:bg-gray-700 dark:border-gray-600">
                     {!participantsFile ? (
                       <div className="text-center">
                         <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                        <p className="mt-2 text-sm text-gray-600">Click or drag file to upload participants list</p>
-                        <p className="text-xs text-gray-500">CSV format only</p>
+                        <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">Click or drag file to upload participants list</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">CSV format only</p>
                       </div>
                     ) : (
                       <div className="text-center">
                         <FileText className="mx-auto h-12 w-12 text-green-600" />
-                        <p className="mt-2 text-sm font-medium text-gray-900">{participantsFile.name}</p>
-                        <p className="text-xs text-gray-500">{Math.round(participantsFile.size / 1024)} KB</p>
+                        <p className="mt-2 text-sm font-medium text-gray-900 dark:text-white">{participantsFile.name}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{Math.round(participantsFile.size / 1024)} KB</p>
                       </div>
                     )}
                     
@@ -359,7 +359,7 @@ const VerificationPage = () => {
                     <Button 
                       type="button"
                       variant="outline" 
-                      className="mt-4"
+                      className="mt-4 dark:bg-gray-100 dark:text-gray-900"
                       onClick={() => document.getElementById('participants-file')?.click()}
                     >
                       {participantsFile ? 'Change File' : 'Select File'}
@@ -377,9 +377,9 @@ const VerificationPage = () => {
                     )}
                   </div>
 
-                  <div className="text-sm text-gray-500 bg-blue-50 p-3 rounded-md">
-                    <p className="font-medium text-blue-700">CSV Format:</p>
-                    <ul className="list-disc list-inside mt-1 space-y-1">
+                  <div className="text-sm text-gray-500 bg-blue-50 p-3 rounded-md dark:bg-blue-900/20">
+                    <p className="font-medium text-blue-700 dark:text-blue-500">CSV Format:</p>
+                    <ul className="list-disc list-inside mt-1 space-y-1 dark:text-slate-400">
                       <li>Name, Email, Phone Number, UTR ID, Expected Amount</li>
                       <li>Ensure the CSV has headers matching these fields</li>
                       <li>UTR ID should match exactly with the PhonePe statement</li>
@@ -435,7 +435,7 @@ const VerificationPage = () => {
                 {/* Sorting Controls */}
                 <div className="flex gap-2">
                   <select 
-                    className="px-3 py-2 border rounded-md text-sm bg-white cursor-pointer"
+                    className="px-3 py-2 border rounded-md text-sm bg-white cursor-pointer dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600"
                     value={sortBy || ''}
                     onChange={(e) => setSortBy(e.target.value || null)}
                   >
@@ -458,7 +458,7 @@ const VerificationPage = () => {
                 
                 <Button
                   onClick={() => setIsWarningModalOpen(true)}
-                  className="bg-gray-900 hover:bg-red-800 text-white shadow-lg transition-transform transform hover:scale-105 cursor-pointer"
+                  className="bg-gray-900 hover:bg-red-800 text-white shadow-lg transition-transform transform hover:scale-105 cursor-pointer dark:bg-gray-300 dark:hover:bg-red-700/80"
                 >
                   <MinusCircle className="mr-2 h-4 w-4" />
                   Delete All
@@ -482,10 +482,10 @@ const VerificationPage = () => {
               initial={{ scale: 0.9 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0.9 }}
-              className="bg-slate-100 p-6 rounded-lg shadow-xl z-10"
+              className="bg-slate-100 p-6 rounded-lg shadow-xl z-10 dark:bg-gray-900"
             >
-                <h2 className="text-gray-800 text-2xl font-bold mb-4">Attention</h2>
-                <p className="text-gray-800 text-lg mb-4">
+                <h2 className="text-gray-800 text-2xl font-bold mb-4 dark:text-white">Attention</h2>
+                <p className="text-gray-800 text-lg mb-4 dark:text-slate-200">
                 This will remove all verified and un-verified participants. <br/> 
                 Are you sure
                 you want to proceed?
@@ -496,7 +496,7 @@ const VerificationPage = () => {
                 </Button>
                 <Button
                   onClick={() => deleteParticipants() }
-                  className="bg-red-800 hover:bg-slate-950 text-white cursor-pointer"
+                  className="bg-red-800 hover:bg-red-700/40 text-white cursor-pointer dark:bg-red-700/50 dark:hover:bg-red-700/70"
                 >
                   Delete
                 </Button>
@@ -535,12 +535,12 @@ const VerificationPage = () => {
                           <TableCell>₹{participant.amount || '0'}</TableCell>
                           <TableCell>
                             {participant.verified ? (
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-700/55 dark:text-green-300">
                                 <CheckCircle className="mr-1 h-3 w-3" />
                                 Verified
                               </span>
                             ) : (
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-700/55 dark:text-red-300">
                                 <AlertCircle className="mr-1 h-3 w-3" />
                                 Not Verified
                               </span>
@@ -551,14 +551,15 @@ const VerificationPage = () => {
                               <div className="relative group">
                                 <Button 
                                   variant="outline"  
-                                  className="cursor-pointer" 
+                                  className="cursor-pointer dark:text-gray-300 dark:bg-gray-700 dark:hover:bg-gray-100/40" 
                                   size="sm" 
                                   onClick={() => handleManualVerify(participant.id, participant.name)}
+
                                 >
                                   Verify Manually
                                 </Button>
                                 <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-gray-900 text-white text-sm rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none shadow-lg z-50">
-                                  By clicking this, it will verify the participant
+                                  Click to verify the participant
                                   <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-t-4 border-l-4 border-r-4 border-gray-900 border-l-transparent border-r-transparent"></div>
                                 </div>
                               </div>

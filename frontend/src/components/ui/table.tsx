@@ -6,11 +6,14 @@ function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
     <div
       data-slot="table-container"
-      className="relative w-full overflow-x-auto"
+      className="relative w-full overflow-x-auto rounded-md border dark:border-gray-800"
     >
       <table
         data-slot="table"
-        className={cn("w-full caption-bottom text-sm", className)}
+        className={cn(
+          "w-full caption-bottom text-sm bg-white dark:bg-gray-950/90",
+          className
+        )}
         {...props}
       />
     </div>
@@ -21,7 +24,10 @@ function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
   return (
     <thead
       data-slot="table-header"
-      className={cn("[&_tr]:border-b dark:border-gray-700", className)}
+      className={cn(
+        "[&_tr]:border-b bg-gray-200 dark:bg-gray-700 dark:border-gray-800",
+        className
+      )}
       {...props}
     />
   )
@@ -31,7 +37,10 @@ function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
   return (
     <tbody
       data-slot="table-body"
-      className={cn("[&_tr:last-child]:border-0", className)}
+      className={cn(
+        "[&_tr:last-child]:border-0 [&_tr:hover]:bg-gray-50 dark:[&_tr:hover]:bg-gray-800/70",
+        className
+      )}
       {...props}
     />
   )
@@ -55,7 +64,7 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
     <tr
       data-slot="table-row"
       className={cn(
-        "hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors dark:border-gray-700 dark:hover:bg-gray-800/50",
+        "border-b transition-colors dark:border-gray-800 data-[state=selected]:bg-gray-100 dark:data-[state=selected]:bg-gray-800/50",
         className
       )}
       {...props}
@@ -68,7 +77,7 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
     <th
       data-slot="table-head"
       className={cn(
-        "text-muted-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+        "h-12 px-4 text-left align-middle text-gray-700 dark:text-white font-medium [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
         className
       )}
       {...props}
@@ -81,7 +90,7 @@ function TableCell({ className, ...props }: React.ComponentProps<"td">) {
     <td
       data-slot="table-cell"
       className={cn(
-        "p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] dark:text-gray-300",
+        "p-4 align-middle dark:text-gray-200 [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
         className
       )}
       {...props}
