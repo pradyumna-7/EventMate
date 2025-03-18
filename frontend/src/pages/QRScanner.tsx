@@ -263,7 +263,7 @@ const QRScanner = () => {
         <Card className="p-6">
           <h3 className="text-lg font-medium mb-4">Scanner</h3>
 
-          <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden relative mb-4">
+          <div className="aspect-video bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden relative mb-4">
             {scanning ? (
               <>
                 <video ref={videoRef} className="w-full h-full object-cover" playsInline muted></video>
@@ -277,8 +277,8 @@ const QRScanner = () => {
               </>
             ) : (
               <div className="w-full h-full flex flex-col items-center justify-center">
-                <Camera className="h-12 w-12 text-gray-400 mb-2" />
-                <p className="text-gray-500 text-sm">Camera preview will appear here</p>
+                <Camera className="h-12 w-12 text-gray-400 dark:text-gray-300 mb-2" />
+                <p className="text-gray-500 dark:text-gray-400 text-sm">Camera preview will appear here</p>
                 {cameraError && <p className="text-red-500 text-sm mt-2">{cameraError}</p>}
               </div>
             )}
@@ -309,11 +309,11 @@ const QRScanner = () => {
             <div className="space-y-4">
               <div className="flex items-center justify-center">
                 {scanResult.verified ? (
-                  <div className="bg-green-100 text-green-800 p-3 rounded-full">
+                  <div className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 p-3 rounded-full">
                     <CheckCircle className="h-8 w-8" />
                   </div>
                 ) : (
-                  <div className="bg-red-100 text-red-800 p-3 rounded-full">
+                  <div className="bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 p-3 rounded-full">
                     <XCircle className="h-8 w-8" />
                   </div>
                 )}
@@ -386,11 +386,11 @@ const QRScanner = () => {
             </div>
           ) : (
             <div className="h-64 flex flex-col items-center justify-center text-center">
-              <div className="bg-gray-100 p-3 rounded-full mb-3">
-                <QrCode className="h-8 w-8 text-gray-400" />
+              <div className="bg-gray-200 dark:bg-gray-700 p-3 rounded-full mb-3">
+                <QrCode className="h-8 w-8 text-gray-400 dark:text-gray-500" />
               </div>
-              <p className="text-gray-500">No QR code scanned yet</p>
-              <p className="text-sm text-gray-400 mt-1">Scan a QR code to see participant details</p>
+              <p className="text-gray-500 dark:text-gray-400">No QR code scanned yet</p>
+              <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Scan a QR code to see participant details</p>
             </div>
           )}
         </Card>

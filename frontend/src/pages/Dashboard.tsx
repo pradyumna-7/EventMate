@@ -85,29 +85,29 @@ const Dashboard = () => {
         <Card className="p-6 bg-white shadow rounded-lg">
           <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Link to="/verify" className="flex items-center p-3 bg-blue-50 rounded-lg hover:bg-blue-100">
-              <FileCheck className="h-5 w-5 text-blue-500 mr-2" />
-              <span>Verify Payments</span>
+            <Link to="/verify" className="flex items-center p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-800/40 transition-colors">
+              <FileCheck className="h-5 w-5 text-blue-500 dark:text-blue-400 mr-2" />
+              <span className="text-blue-700 dark:text-blue-300">Verify Payments</span>
             </Link>
-            <Link to="/generate-qr" className="flex items-center p-3 bg-green-50 rounded-lg hover:bg-green-100">
-              <QrCode className="h-5 w-5 text-green-500 mr-2" />
-              <span>Generate QR Codes</span>
+            <Link to="/generate-qr" className="flex items-center p-3 bg-green-50 dark:bg-green-900/30 rounded-lg hover:bg-green-100 dark:hover:bg-green-800/40 transition-colors">
+              <QrCode className="h-5 w-5 text-green-500 dark:text-green-400 mr-2" />
+              <span className="text-green-700 dark:text-green-300">Generate QR Codes</span>
             </Link>
-            <Link to="/scanner" className="flex items-center p-3 bg-purple-50 rounded-lg hover:bg-purple-100">
-              <Scan className="h-5 w-5 text-purple-500 mr-2" />
-              <span>Scan QR Codes</span>
+            <Link to="/scanner" className="flex items-center p-3 bg-purple-50 dark:bg-purple-900/30 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-800/40 transition-colors">
+              <Scan className="h-5 w-5 text-purple-500 dark:text-purple-400 mr-2" />
+              <span className="text-purple-700 dark:text-purple-300">Scan QR Codes</span>
             </Link>
-            <Link to="/verify?tab=results" className="flex items-center p-3 bg-yellow-50 rounded-lg hover:bg-yellow-100">
-              <Users className="h-5 w-5 text-yellow-500 mr-2" />
-              <span>View All Participants</span>
+            <Link to="/verify?tab=results" className="flex items-center p-3 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg hover:bg-yellow-100 dark:hover:bg-yellow-800/40 transition-colors">
+              <Users className="h-5 w-5 text-yellow-500 dark:text-yellow-400 mr-2" />
+              <span className="text-yellow-700 dark:text-yellow-300">View All Participants</span>
             </Link>
-            <Link to="/scanner?view=attendance" className="flex items-center p-3 bg-indigo-50 rounded-lg hover:bg-indigo-100">
-              <Users className="h-5 w-5 text-indigo-500 mr-2" />
-              <span>View Attendance</span>
+            <Link to="/scanner?view=attendance" className="flex items-center p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-800/40 transition-colors">
+              <Users className="h-5 w-5 text-indigo-500 dark:text-indigo-400 mr-2" />
+              <span className="text-indigo-700 dark:text-indigo-300">View Attendance</span>
             </Link>
-            <Link to="/unattended" className="flex items-center p-3 bg-red-50 rounded-lg hover:bg-red-100">
-              <Users className="h-5 w-5 text-red-500 mr-2" />
-              <span>View Unattended</span>
+            <Link to="/unattended" className="flex items-center p-3 bg-red-50 dark:bg-red-900/30 rounded-lg hover:bg-red-100 dark:hover:bg-red-800/40 transition-colors">
+              <Users className="h-5 w-5 text-red-500 dark:text-red-400 mr-2" />
+              <span className="text-red-700 dark:text-red-300">View Unattended</span>
             </Link>
           </div>
         </Card>

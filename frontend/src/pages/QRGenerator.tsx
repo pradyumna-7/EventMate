@@ -489,16 +489,16 @@ const QRGenerator = () => {
               {generatedQRs.map((qr) => {
                 const participant = participants.find((p) => p._id === qr.id)
                 return (
-                  <div key={qr.id} className="bg-white p-4 rounded-lg shadow">
+                  <div key={qr.id} className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
                     <div className="flex flex-col items-center">
                       <img
                         src={qr.qrCode}
                         alt={`QR code for ${participant?.name}`}
-                        className="w-full max-w-[200px] h-auto"
+                        className="w-full max-w-[200px] h-auto bg-white rounded-lg p-2"
                       />
                       <div className="mt-3 text-center">
-                        <h4 className="font-medium">{participant?.name}</h4>
-                        <p className="text-sm text-gray-500">{participant?.phoneNumber}</p>
+                        <h4 className="font-medium text-gray-900 dark:text-gray-100">{participant?.name}</h4>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{participant?.phoneNumber}</p>
                       </div>
                       <div className="mt-3 flex space-x-2">
                         <Button variant="outline" className="cursor-pointer" size="sm" onClick={() => {
