@@ -290,7 +290,7 @@ const QRScanner = () => {
                 Stop Scanning
               </Button>
             ) : (
-              <Button onClick={startScanning} className="w-full max-w-xs">
+              <Button onClick={startScanning} className="w-full max-w-xs cursor-pointer">
                 Start Scanning
               </Button>
             )}
@@ -324,39 +324,39 @@ const QRScanner = () => {
                 <p className="text-gray-500">{scanResult.email}</p>
               </div>
 
-              <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+              <div className="bg-gray-50 p-4 rounded-lg space-y-2 dark:bg-gray-700">
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Verification Status:</span>
+                  <span className="text-gray-500 dark:text-gray-300">Verification Status:</span>
                   <span className={scanResult.verified ? "text-green-600 font-medium" : "text-red-600 font-medium"}>
                     {scanResult.verified ? "Verified" : "Not Verified"}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Phone:</span>
+                  <span className="text-gray-500 dark:text-gray-300">Phone:</span>
                   <span className="font-medium">{scanResult.phoneNumber}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Amount:</span>
+                  <span className="text-gray-500 dark:text-gray-300">Amount:</span>
                   <span className="font-medium">
                     {scanResult.amount !== undefined ? `₹${scanResult.amount}` : 'N/A'}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Attendance:</span>
+                  <span className="text-gray-500 dark:text-gray-300">Attendance:</span>
                   <span className={scanResult.attended ? "text-green-600 font-medium" : "text-red-600 font-medium"}>
                     {scanResult.attended ? "Present" : "Not Marked"}
                   </span>
                 </div>
                 {scanResult.utrId && (
                   <div className="flex justify-between">
-                    <span className="text-gray-500">UTR ID:</span>
+                    <span className="text-gray-500 dark:text-gray-300">UTR ID:</span>
                     <span className="font-medium">{scanResult.utrId}</span>
                   </div>
                 )}
               </div>
 
               <div className="flex flex-col space-y-2">
-                <Button variant="outline" onClick={() => setScanResult(null)}>
+                <Button variant="outline" onClick={() => setScanResult(null)} className="cursor-pointer">
                   Scan Another
                 </Button>
                 
