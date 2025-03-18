@@ -465,11 +465,11 @@ const QRGenerator = () => {
                 <p className="text-sm text-gray-500">{generatedQRs.length} QR codes generated</p>
               </div>
               <div className="flex space-x-2">
-                <Button variant="outline" onClick={downloadQRCodes} className="flex items-center">
+                <Button variant="outline" onClick={downloadQRCodes} className="flex items-center cursor-pointer">
                   <Download className="mr-2 h-4 w-4" />
                   Download All
                 </Button>
-                <Button onClick={sendQRCodes} className="flex items-center" disabled={isSending}>
+                <Button onClick={sendQRCodes} className="flex items-center cursor-pointer" disabled={isSending}>
                   {isSending ? (
                     <>
                       <RefreshCw className="mr-2 h-4 w-4 animate-spin" />

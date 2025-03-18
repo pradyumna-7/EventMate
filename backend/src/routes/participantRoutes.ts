@@ -6,7 +6,8 @@ import {
   sendQRCodes, 
   getParticipantById,
   markAttendance,
-  getAllAttendees
+  getAllAttendees,
+  getUnattendedParticipants
 } from '../controllers/participantController';
 
 const router = express.Router();
@@ -26,6 +27,8 @@ router.post('/generate-qr', generateQRCodes);
 router.post('/send-qr', sendQRCodes);
 
 router.post('/mark-attendance', markAttendance);
+
+router.get('/unattended', getUnattendedParticipants);
 
 router.get('/:id', getParticipantById);
 

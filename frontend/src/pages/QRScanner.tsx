@@ -8,6 +8,7 @@ import toast from "react-hot-toast"
 import jsQR from "jsqr"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useSearchParams } from "react-router-dom"
 
 // Update QRData interface to include hash
 interface QRData {
@@ -29,6 +30,7 @@ interface ParticipantData {
 }
 
 const QRScanner = () => {
+  const [searchParams] = useSearchParams();
   const [scanning, setScanning] = useState(false)
   const [scanResult, setScanResult] = useState<ParticipantData | null>(null)
   const [cameraError, setCameraError] = useState<string | null>(null)
@@ -245,6 +247,13 @@ const QRScanner = () => {
 
   useEffect(() => stopScanning, [stopScanning])
 
+  useEffect(() => {
+    if (searchParams.get('view') === 'attendance') {
+      const attendanceSection = document.querySelector('#attendance-list');
+      attendanceSection?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [searchParams]);
+
   return (
     <div className="space-y-6">
       {/* <h1 className="text-2xl font-bold">QR Scanner</h1> */}
@@ -388,7 +397,7 @@ const QRScanner = () => {
       </div>
 
       {/* Attended Participants List */}
-      <Card className="p-6">
+      <Card className="p-6" id="attendance-list">
         <div className="flex justify-between items-center mb-4">
           <div>
             <h3 className="text-lg font-medium">Attended Participants</h3>

@@ -68,7 +68,7 @@ export const storeParticipants = async (participants: ParticipantData[]): Promis
 // Get all participants with optional search and sorting
 export const getAllParticipants = async (req: Request, res: Response) => {
   try {
-    const { search, sortBy, sortOrder, verified } = req.query;
+    const { search, sortBy, sortOrder, verified, attended } = req.query;
     
     // Build the query
     let query = Participant.find();
@@ -76,7 +76,11 @@ export const getAllParticipants = async (req: Request, res: Response) => {
     // Apply verified filter if provided
     if (verified !== undefined) {
       query = query.where('verified').equals(verified === 'true');
-      console.log(`Filtering participants by verification status: ${verified}`);
+    }
+
+    // Apply attended filter if provided
+    if (attended !== undefined) {
+      query = query.where('attended').equals(attended === 'true');
     }
     
     // Apply search if provided
@@ -394,6 +398,47 @@ export const getAllAttendees = async (req: Request, res: Response) => {
     return res.status(500).json({
       success: false,
       message: 'Server error while fetching attended participants',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};
+
+// Get all unattended but verified participants
+export const getUnattendedParticipants = async (req: Request, res: Response) => {
+  try {
+    const { search } = req.query;
+    
+    // Build the query for verified but unattended participants
+    let query = Participant.find({ 
+      verified: true,
+      attended: false 
+    });
+    
+    // Apply search if provided
+    if (search) {
+      const searchRegex = new RegExp(String(search), 'i');
+      query = query.or([
+        { name: searchRegex },
+        { email: searchRegex },
+        { phoneNumber: searchRegex }
+      ]);
+    }
+    
+    // Sort by verification date
+    query = query.sort({ verifiedAt: -1 });
+    
+    const participants = await query.exec();
+    
+    return res.status(200).json({
+      success: true,
+      count: participants.length,
+      data: participants
+    });
+  } catch (error) {
+    console.error('Error fetching unattended participants:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error while fetching unattended participants',
       error: error instanceof Error ? error.message : 'Unknown error'
     });
   }

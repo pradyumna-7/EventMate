@@ -101,6 +101,14 @@ const Dashboard = () => {
               <Users className="h-5 w-5 text-yellow-500 mr-2" />
               <span>View All Participants</span>
             </Link>
+            <Link to="/scanner?view=attendance" className="flex items-center p-3 bg-indigo-50 rounded-lg hover:bg-indigo-100">
+              <Users className="h-5 w-5 text-indigo-500 mr-2" />
+              <span>View Attendance</span>
+            </Link>
+            <Link to="/unattended" className="flex items-center p-3 bg-red-50 rounded-lg hover:bg-red-100">
+              <Users className="h-5 w-5 text-red-500 mr-2" />
+              <span>View Unattended</span>
+            </Link>
           </div>
         </Card>
 

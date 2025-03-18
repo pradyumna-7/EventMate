@@ -6,6 +6,7 @@ import Dashboard from "./pages/Dashboard"
 import VerificationPage from "./pages/VerificationPage"
 import QRScanner from "./pages/QRScanner"
 import QRGenerator from "./pages/QRGenerator"
+import UnattendedList from "./pages/UnattendedList"
 import "./App.css"
 
 const App: React.FC = () => {
@@ -20,7 +21,8 @@ const App: React.FC = () => {
             <Route path="/verify" element={<VerificationPage />} />
             <Route path="/generate-qr" element={<QRGenerator />} />
             <Route path="/scanner" element={<QRScanner />} />
-                      </Routes>
+            <Route path="/unattended" element={<UnattendedList />} />
+          </Routes>
         </div>
       </div>
     </Router>
