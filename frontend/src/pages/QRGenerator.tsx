@@ -36,6 +36,8 @@ const QRGenerator = () => {
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
   const [searchQuery, setSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState('participants');
+  const [isSending, setIsSending] = useState(false);
+  const [currentParticipant, setCurrentParticipant] = useState<Participant | null>(null);
 
   const backendUrl = 'http://localhost:5000';
 
@@ -237,31 +239,35 @@ const QRGenerator = () => {
   }
 
   const sendQRCodes = async () => {
-    setIsLoading(true);
+    setIsSending(true);
     try {
-      const response = await fetch(`${backendUrl}/api/participants/send-qr`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      for (const participant of participants) {
+        setCurrentParticipant(participant);
+        const response = await fetch(`${backendUrl}/api/participants/send-qr`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ participantId: participant._id })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+          throw new Error(data.message || "Failed to send QR code");
+        }
       }
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        toast.success(data.message || "QR codes sent successfully!");
-      } else {
-        throw new Error(data.message || "Failed to send QR codes");
-      }
+      toast.success("QR codes sent successfully!");
     } catch (error) {
       console.error("Error sending QR codes:", error);
       toast.error(`Failed to send QR codes: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
-      setIsLoading(false);
+      setIsSending(false);
+      setCurrentParticipant(null);
     }
-  }
+  };
 
   const downloadQRCodes = () => {
     toast.success("QR codes downloaded successfully!")
@@ -463,9 +469,18 @@ const QRGenerator = () => {
                   <Download className="mr-2 h-4 w-4" />
                   Download All
                 </Button>
-                <Button onClick={sendQRCodes} className="flex items-center">
-                  <Send className="mr-2 h-4 w-4" />
-                  Send to Participants
+                <Button onClick={sendQRCodes} className="flex items-center" disabled={isSending}>
+                  {isSending ? (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                      {currentParticipant ? `Sending to ${currentParticipant.name}...` : "Sending..."}
+                    </>
+                  ) : (
+                    <>
+                      <Send className="mr-2 h-4 w-4" />
+                      Send to Participants
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
