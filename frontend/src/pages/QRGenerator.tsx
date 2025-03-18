@@ -360,7 +360,7 @@ const QRGenerator = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-12"></TableHead>
+                    <TableHead className="w-12 text-center font-semibold text-gray-600"></TableHead>
                     {[
                       { key: 'name', label: 'Name' },
                       { key: 'email', label: 'Email' },
@@ -369,10 +369,10 @@ const QRGenerator = () => {
                     ].map((col) => (
                       <TableHead 
                         key={col.key}
-                        className="cursor-pointer"
+                        className="cursor-pointer text-center font-semibold text-gray-600"
                         onClick={() => handleSort(col.key as SortField)}
                       >
-                        <div className="flex items-center">
+                        <div className="flex items-center justify-center">
                           <span>{col.label}</span>
                           <ChevronDown 
                             className={cn(
@@ -385,7 +385,7 @@ const QRGenerator = () => {
                         </div>
                       </TableHead>
                     ))}
-                    <TableHead>Status</TableHead>
+                    <TableHead className="text-center font-semibold text-gray-600">Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

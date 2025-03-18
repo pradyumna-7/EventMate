@@ -430,10 +430,10 @@ const QRScanner = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Time</TableHead>
+                <TableHead className="text-center font-semibold text-gray-600">Name</TableHead>
+                <TableHead className="text-center font-semibold text-gray-600">Email</TableHead>
+                <TableHead className="text-center font-semibold text-gray-600">Phone</TableHead>
+                <TableHead className="text-center font-semibold text-gray-600">Time</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

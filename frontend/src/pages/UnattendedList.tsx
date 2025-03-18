@@ -83,10 +83,10 @@ const UnattendedList = () => {
           <table className="w-full">
             <thead>
               <tr className="border-b">
-                <th className="text-left p-2">Name</th>
-                <th className="text-left p-2">Email</th>
-                <th className="text-left p-2">Phone</th>
-                <th className="text-left p-2">Status</th>
+                <th className="text-center p-2 text-gray-600 font-semibold">Name</th>
+                <th className="text-center p-2 text-gray-600 font-semibold">Email</th>
+                <th className="text-center p-2 text-gray-600 font-semibold">Phone</th>
+                <th className="text-center p-2 text-gray-600 font-semibold">Status</th>
               </tr>
             </thead>
             <tbody>

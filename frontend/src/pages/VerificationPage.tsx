@@ -515,45 +515,13 @@ const VerificationPage = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead 
-                        className="cursor-pointer hover:bg-gray-100"
-                        onClick={() => {
-                          setSortBy('name')
-                          setSortOrder(sortBy === 'name' && sortOrder === 'asc' ? 'desc' : 'asc')
-                        }}
-                      >
-                        Name {sortBy === 'name' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}
-                      </TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead 
-                        className="cursor-pointer hover:bg-gray-100"
-                        onClick={() => {
-                          setSortBy('phone')
-                          setSortOrder(sortBy === 'phone' && sortOrder === 'asc' ? 'desc' : 'asc')
-                        }}
-                      >
-                        Phone {sortBy === 'phone' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}
-                      </TableHead>
-                      <TableHead>UTR ID</TableHead>
-                      <TableHead 
-                        className="cursor-pointer hover:bg-gray-100"
-                        onClick={() => {
-                          setSortBy('amount')
-                          setSortOrder(sortBy === 'amount' && sortOrder === 'asc' ? 'desc' : 'asc')
-                        }}
-                      >
-                        Amount {sortBy === 'amount' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}
-                      </TableHead>
-                      <TableHead 
-                        className="cursor-pointer hover:bg-gray-100"
-                        onClick={() => {
-                          setSortBy('verified')
-                          setSortOrder(sortBy === 'verified' && sortOrder === 'asc' ? 'desc' : 'asc')
-                        }}
-                      >
-                        Status {sortBy === 'verified' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}
-                      </TableHead>
-                      <TableHead>Action</TableHead>
+                      <TableHead className="text-center font-semibold text-gray-600">Name</TableHead>
+                      <TableHead className="text-center font-semibold text-gray-600">Email</TableHead>
+                      <TableHead className="text-center font-semibold text-gray-600">Phone</TableHead>
+                      <TableHead className="text-center font-semibold text-gray-600">UTR ID</TableHead>
+                      <TableHead className="text-center font-semibold text-gray-600">Amount</TableHead>
+                      <TableHead className="text-center font-semibold text-gray-600">Status</TableHead>
+                      <TableHead className="text-center font-semibold text-gray-600">Action</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
