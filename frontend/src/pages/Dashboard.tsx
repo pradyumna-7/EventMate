@@ -6,6 +6,13 @@ import { FileCheck, QrCode, Scan, Users } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import axios from "axios"
 
+interface Activity {
+  action: string
+  user: string
+  timestamp: string
+  id: string
+}
+
 const Dashboard = () => {
   const [stats, setStats] = useState({
     totalParticipants: 0,
@@ -13,28 +20,46 @@ const Dashboard = () => {
     pendingVerification: 0,
     attendedParticipants: 0,
   })
+  const [activities, setActivities] = useState<Activity[]>([])
 
   const backendUrl = "http://localhost:5000"
 
   useEffect(() => {
-    // In a real app, fetch stats from the backend
-    const fetchStats = async () => {
+    const fetchData = async () => {
       try {
-        const totalParticipants = await axios.get(`${backendUrl}/api/verification/results`)
-        const attendance = await axios.get(`${backendUrl}/api/participants/get-all-attendees`)
+        const [totalParticipants, attendance, activities] = await Promise.all([
+          axios.get(`${backendUrl}/api/verification/results`),
+          axios.get(`${backendUrl}/api/participants/get-all-attendees`),
+          axios.get(`${backendUrl}/api/activities/recent`)
+        ]);
+        
         setStats({
           totalParticipants: totalParticipants.data.totalCount,
           verifiedParticipants: totalParticipants.data.verifiedCount,
           pendingVerification: totalParticipants.data.pending,
           attendedParticipants: attendance.data.count,
-        })
-      } catch (error) {
-        console.error("Error fetching stats:", error)
-      }
-    }
+        });
 
-    fetchStats()
-  }, [])
+        setActivities(activities.data.data);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const getTimeAgo = (timestamp: string) => {
+    const seconds = Math.floor((new Date().getTime() - new Date(timestamp).getTime()) / 1000);
+    
+    if (seconds < 60) return 'just now';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes} minutes ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} hours ago`;
+    const days = Math.floor(hours / 24);
+    return `${days} days ago`;
+  }
 
   return (
     <div className="space-y-6">
@@ -119,22 +144,21 @@ const Dashboard = () => {
         <Card className="p-6 bg-white shadow rounded-lg">
           <h2 className="text-lg font-semibold mb-4">Recent Activity</h2>
           <div className="space-y-3">
-            {[
-              { action: "Payment verified", user: "Rahul Sharma", time: "10 minutes ago" },
-              { action: "QR code generated", user: "Priya Patel", time: "25 minutes ago" },
-              { action: "Attendance marked", user: "Amit Kumar", time: "1 hour ago" },
-              { action: "Manual verification", user: "Neha Singh", time: "2 hours ago" },
-            ].map((activity, index) => (
-              <div key={index} className="flex items-start">
+            {activities.length > 0 ? activities.slice(0, 5).map((activity) => (
+              <div key={activity.id} className="flex items-start">
                 <div className="h-2 w-2 mt-2 rounded-full bg-blue-500 mr-2"></div>
                 <div>
                   <p className="text-sm font-medium">
                     {activity.action} - {activity.user}
                   </p>
-                  <p className="text-xs text-gray-500">{activity.time}</p>
+                  <p className="text-xs text-gray-500">
+                    {getTimeAgo(activity.timestamp)}
+                  </p>
                 </div>
               </div>
-            ))}
+            )) : (
+              <p className="text-sm text-gray-500">No recent activity</p>
+            )}
           </div>
         </Card>
       </div>

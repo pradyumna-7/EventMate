@@ -4,6 +4,7 @@ import cors from 'cors';
 import path from 'path';
 import participantRoutes from './routes/participantRoutes';
 import verificationRoutes from './routes/verificationRoutes';
+import activityRoutes from './routes/activityRoutes';
 
 const app = express();
 
@@ -22,6 +23,7 @@ if (!fs.existsSync(uploadsDir)) {
 // Routes
 app.use('/api/participants', participantRoutes);
 app.use('/api/verification', verificationRoutes);
+app.use('/api/activities', activityRoutes);
 
 // For debugging - log all incoming requests
 app.use((req, res, next) => {

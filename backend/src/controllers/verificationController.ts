@@ -4,6 +4,7 @@ import pdfParse from 'pdf-parse';
 import { Request, Response } from 'express';
 import Participant from '../models/Participant';
 import { storeParticipants } from './participantController';
+import { logActivity } from './activityController';
 
 export interface PhonePeTransaction {
   date: string;
@@ -350,6 +351,9 @@ export const updateVerificationStatus = async (req: Request, res: Response) => {
     participant.verified = true;
     await participant.save();
     
+    // Log the activity
+    await logActivity('Payment verified', participant.name);
+    
     return res.status(200).json({ success: true, verified: true });
   } catch (error) {
     console.error('Error updating verification status:', error);
@@ -376,6 +380,9 @@ export const undoVerification = async (req: Request, res: Response) => {
     }
     participant.verified = false;
     await participant.save();
+    
+    // Log the activity
+    await logActivity('Verification undone', participant.name);
     
     return res.status(200).json({ success: true, verified: false });
   } catch (error) {

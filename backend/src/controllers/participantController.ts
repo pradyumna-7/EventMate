@@ -4,6 +4,7 @@ import { ParticipantData } from './verificationController';
 import QRCode from 'qrcode';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto'; // Add import for crypto module
+import { logActivity } from './activityController';
 
 // Function to generate secure hash for QR codes
 const generateQRHash = (participantId: string): string => {
@@ -193,6 +194,9 @@ export const generateQRCodes = async (req: Request, res: Response) => {
       participant.qrCode = qrCode;
       await participant.save();
       
+      // Log QR code generation
+      await logActivity('QR code generated', participant.name);
+      
       results.push({
         id,
         success: true,
@@ -348,6 +352,9 @@ export const markAttendance = async (req: Request, res: Response) => {
     participant.attended = true;
     participant.attendedAt = new Date();
     await participant.save();
+    
+    // Log attendance
+    await logActivity('Attendance marked', participant.name);
     
     return res.status(200).json({
       success: true,
