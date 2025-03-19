@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
 import { FileCheck, QrCode, Scan, Users } from "lucide-react"
 import { Card } from "@/components/ui/card"
+import axios from "axios"
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -13,16 +14,19 @@ const Dashboard = () => {
     attendedParticipants: 0,
   })
 
+  const backendUrl = "http://localhost:5000"
+
   useEffect(() => {
     // In a real app, fetch stats from the backend
     const fetchStats = async () => {
       try {
-        // Mock data for demonstration
+        const totalParticipants = await axios.get(`${backendUrl}/api/verification/results`)
+        const attendance = await axios.get(`${backendUrl}/api/participants/get-all-attendees`)
         setStats({
-          totalParticipants: 120,
-          verifiedParticipants: 85,
-          pendingVerification: 35,
-          attendedParticipants: 42,
+          totalParticipants: totalParticipants.data.totalCount,
+          verifiedParticipants: totalParticipants.data.verifiedCount,
+          pendingVerification: totalParticipants.data.pending,
+          attendedParticipants: attendance.data.count,
         })
       } catch (error) {
         console.error("Error fetching stats:", error)

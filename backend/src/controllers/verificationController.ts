@@ -317,6 +317,7 @@ export const getVerificationResults = async (req: Request, res: Response) => {
       success: true,
       verifiedCount: results.filter(p => p.verified).length,
       totalCount: results.length,
+      pending: results.filter(p => !p.verified).length,
       participants: results
     });
   } catch (error) {

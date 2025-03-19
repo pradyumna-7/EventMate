@@ -413,11 +413,11 @@ const QRGenerator = () => {
                         <TableCell>{participant.utrId || 'N/A'}</TableCell>
                         <TableCell>
                           {participant.qrCode ? (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-700/55 dark:text-green-300">
                               QR Generated
                             </span>
                           ) : (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-700/55 dark:text-blue-300">
                               Ready
                             </span>
                           )}
@@ -489,7 +489,7 @@ const QRGenerator = () => {
               {generatedQRs.map((qr) => {
                 const participant = participants.find((p) => p._id === qr.id)
                 return (
-                  <div key={qr.id} className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+                  <div key={qr.id} className="bg-white dark:bg-slate-900 p-4 rounded-lg shadow">
                     <div className="flex flex-col items-center">
                       <img
                         src={qr.qrCode}
@@ -501,7 +501,7 @@ const QRGenerator = () => {
                         <p className="text-sm text-gray-500 dark:text-gray-400">{participant?.phoneNumber}</p>
                       </div>
                       <div className="mt-3 flex space-x-2">
-                        <Button variant="outline" className="cursor-pointer" size="sm" onClick={() => {
+                        <Button variant="outline" className="cursor-pointer dark:bg-gray-700 dark:hover:bg-gray-600" size="sm" onClick={() => {
                           // Create a download link for the QR code
                           const link = document.createElement('a');
                           link.href = qr.qrCode;
