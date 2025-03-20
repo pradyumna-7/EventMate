@@ -605,6 +605,72 @@ paths:
                 success: false
                 message: "Failed to retrieve activities"
 
+  /activities/all:
+    get:
+      operationId: getAllActivities
+      summary: Get all activities
+      description: Retrieves a complete list of all system activities
+      tags:
+        - Activities
+      responses:
+        '200':
+          description: Successfully retrieved all activities
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    description: Whether the API call was successful
+                    example: true
+                  data:
+                    type: array
+                    description: List of all activities
+                    items:
+                      $ref: '#/components/schemas/Activity'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Failed to retrieve activities"
+
+  /activities/delete-all:
+    delete:
+      operationId: deleteAllActivities
+      summary: Delete all activities
+      description: Removes all recorded activities from the system
+      tags:
+        - Activities
+      responses:
+        '200':
+          description: Successfully deleted all activities
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    description: Whether the API call was successful
+                    example: true
+                  message:
+                    type: string
+                    example: "All activities deleted successfully"
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Failed to delete activities"
+
 components:
   schemas:
     VerificationResponse:
