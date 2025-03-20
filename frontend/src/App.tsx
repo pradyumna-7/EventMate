@@ -7,6 +7,7 @@ import VerificationPage from "./pages/VerificationPage"
 import QRScanner from "./pages/QRScanner"
 import QRGenerator from "./pages/QRGenerator"
 import UnattendedList from "./pages/UnattendedList"
+import ActivityLog from "./pages/ActivityLog"
 import { ThemeProvider } from "@/components/theme-provider"
 import "./App.css"
 
@@ -24,6 +25,7 @@ const App: React.FC = () => {
               <Route path="/generate-qr" element={<QRGenerator />} />
               <Route path="/scanner" element={<QRScanner />} />
               <Route path="/unattended" element={<UnattendedList />} />
+              <Route path='/activity-log' element={<ActivityLog />} />
             </Routes>
           </div>
         </div>

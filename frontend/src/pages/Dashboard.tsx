@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
-import { FileCheck, QrCode, Scan, Users } from "lucide-react"
+import { FileCheck, QrCode, Scan, Users, Clock } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import axios from "axios"
 
@@ -144,8 +144,8 @@ const Dashboard = () => {
         <Card className="p-6 bg-white shadow rounded-lg">
           <h2 className="text-lg font-semibold mb-4">Recent Activity</h2>
           <div className="space-y-3">
-            {activities.length > 0 ? activities.slice(0, 5).map((activity) => (
-              <div key={activity.id} className="flex items-start">
+            {activities.length > 0 ? activities.slice(0, 5).map((activity, index) => (
+              <div key={`activity-${activity.id || index}`} className="flex items-start">
                 <div className="h-2 w-2 mt-2 rounded-full bg-blue-500 mr-2"></div>
                 <div>
                   <p className="text-sm font-medium">
@@ -159,6 +159,15 @@ const Dashboard = () => {
             )) : (
               <p className="text-sm text-gray-500">No recent activity</p>
             )}
+          </div>
+          <div className="mt-4 text-right">
+            <Link 
+              to="/activity-log" 
+              className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
+            >
+              <Clock className="h-4 w-4 mr-1" />
+              View all log activities
+            </Link>
           </div>
         </Card>
       </div>
