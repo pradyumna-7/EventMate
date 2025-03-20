@@ -91,7 +91,7 @@ const ActivityLog = () => {
         </button>
       </div>
 
-      <Card className="p-6 bg-white shadow-lg rounded-xl dark:bg-gray-950 dark:shadow-gray-700 dark:">
+      <Card className="p-6 bg-white shadow-lg rounded-xl dark:bg-gray-950 dark:shadow-gray-800">
         {loading ? (
           <div className="space-y-4">
             {[...Array(5)].map((_, i) => (
