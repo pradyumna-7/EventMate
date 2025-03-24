@@ -6,6 +6,8 @@
 
 EventMate is a comprehensive event management solution designed to streamline registration, payment verification, and attendance tracking for events of any scale. The application bridges the gap between payment processing and event attendance management by automatically verifying UPI payments against participant records and providing QR code-based check-in functionality.
 
+Currently, EventMate is optimized for managing a single event efficiently. Development is underway to support multiple events within a single dashboard, allowing organizers to manage concurrent events while maintaining the same streamlined verification and attendance tracking features.
+
 Built with modern web technologies, EventMate offers an intuitive interface for event organizers to:
 - Verify payments by matching PhonePe transaction statements with participant data
 - Generate unique QR codes for verified participants
