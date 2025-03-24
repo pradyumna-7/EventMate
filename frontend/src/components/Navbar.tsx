@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom"
-import { QrCode, FileCheck, Home, Scan } from "lucide-react"
+import { FileCheck, Home, Scan, QrCode } from "lucide-react"
 import { ModeToggle } from "@/components/mode-toggle"
+import logoImage from "../assets/logo.png" // Import the logo from assets
 
 const Navbar = () => {
   return (
@@ -9,8 +10,12 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex items-center text-xl font-bold text-gray-800 dark:text-white">
-              <QrCode className="mr-2" />
-              EventMate - UPI Verification System
+              <img 
+                src={logoImage} 
+                alt="EventMate Logo" 
+                className="h-8 mr-2" 
+              />
+              <span>UPI Verification System</span>
             </Link>
           </div>
           <div className="flex space-x-4">
