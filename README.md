@@ -50,6 +50,7 @@ The backend is powered by Node.js with Express, providing RESTful APIs for the f
 Contains API documentation and usage guides.
 
 - **OpenAPI Specification**: Complete API documentation following OpenAPI 3.0 standard
+- **API Documentation**: Available online at [https://pradyumna-7.github.io/EventMate/](https://pradyumna-7.github.io/EventMate/)
 
 ## 3. How to Run the Application
 
@@ -126,6 +127,29 @@ Contains API documentation and usage guides.
    cd e:\EventMate\backend
    npm start
    ```
+
+### QR Scanner Usage
+
+The QR Scanner module allows event organizers to efficiently check in participants using a smartphone camera. Follow these steps to use the QR scanner functionality:
+
+#### Using your webcam
+Allow your browser to give access to the application and you can then use your machine's webcam directly to scan QR codes for participants upon on entry
+
+#### Using your Phone's camera 
+The application can easily connect to your phone and use its camera as the QR scanner. Follow the steps below to connect your phone to the application
+
+**Step 1: Check System Requirements**
+- PC: Windows 10 (October 2018 update or later) or Windows 11.
+- Phone:
+   1. Android: Android 7.0 or higher.
+   2. iPhone: iOS 14 or higher.
+
+**Step 2: Setup Windows Phone Link**
+Follow the steps outlined in the link below <br/>
+[How to Connect Smartphone to Windows PC using Phone Link](https://www.geeksforgeeks.org/connect-phone-to-win-with-phone-link/)
+
+**Step 3: Follow the steps in the video below**
+
 
 ## 4. Integration with Existing Systems
 
