@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EventMate - QR Scanner Phone Tutorial</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .video-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            height: 0;
+            margin-bottom: 20px;
+        }
+        .video-container video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .return-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            text-decoration: none;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <h1>Using Phone for QR Scanning Tutorial</h1>
+    
+    <div class="video-container">
+        <video controls>
+            <source src="./assets/Using-Phone-for-QR-Scanning.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+
+    <h2>Steps to use your phone as a QR scanner:</h2>
+    <ol>
+        <li>Open settings on your PC</li>
+        <li>Go to Bluetooth & Devices > Mobile Devices > Manage Devices</li>
+        <li>You should see your connected phone</li>
+        <li>Click on "Manage Devices" and turn on the option: "Use as a connected camera"</li>
+    </ol>
+
+    <a class="return-link" href="https://pradyumna-7.github.io/EventMate/">Return to API documentation</a>
+</body>
+</html>

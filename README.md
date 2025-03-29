@@ -150,7 +150,7 @@ Follow the steps outlined in the link below <br/>
 
 **Step 3: Follow the steps in the video below**
 Ensure that your phone is connected to your PC through windows phone link Click the image below to watch the video tutorial on how to use your phone for QR scanning.
-[![Using Phone for QR Scanning](./Using-Phone-for-QR-Scanning.png)](./Using-Phone-for-QR-Scanning.mp4)  
+[![Using Phone for QR Scanning](./docs/assets/Using-Phone-for-QR-Scanning.png)](https://pradyumna-7.github.io/EventMate/video-tutorial.html)  
    - Open settings on your PC
    - Go to Bluetooth & Devices > Mobile Devices > Manage Devices
    - You should your connected phone
