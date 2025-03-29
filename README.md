@@ -149,7 +149,12 @@ Follow the steps outlined in the link below <br/>
 [How to Connect Smartphone to Windows PC using Phone Link](https://www.geeksforgeeks.org/connect-phone-to-win-with-phone-link/)
 
 **Step 3: Follow the steps in the video below**
-
+Ensure that your phone is connected to your PC through windows phone link Click the image below to watch the video tutorial on how to use your phone for QR scanning.
+[![Using Phone for QR Scanning](./Using-Phone-for-QR-Scanning.png)](./Using-Phone-for-QR-Scanning.mp4)  
+   - Open settings on your PC
+   - Go to Bluetooth & Devices > Mobile Devices > Manage Devices
+   - You should your connected phone
+   - Click on "Manage Devices" and turn on the option: "Use as a connected camera" 
 
 ## 4. Integration with Existing Systems
 
