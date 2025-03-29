@@ -153,7 +153,7 @@ Ensure that your phone is connected to your PC through windows phone link Click 
 [![Using Phone for QR Scanning](./docs/assets/Using-Phone-for-QR-Scanning.png)](https://pradyumna-7.github.io/EventMate/video-tutorial.html)  
    - Open settings on your PC
    - Go to Bluetooth & Devices > Mobile Devices > Manage Devices
-   - You should your connected phone
+   - You should see your connected phone
    - Click on "Manage Devices" and turn on the option: "Use as a connected camera" 
 
 ## 4. Integration with Existing Systems
